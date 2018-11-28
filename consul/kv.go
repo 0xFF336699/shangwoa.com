@@ -202,20 +202,6 @@ func parseValue(res *KVRes, kv *KV) (err error) {
 	return nil
 }
 
-func MapToStruct(m map[string]*KV, s interface{}) error {
-	t := map[string]*KV{}
-	for k, v := range m{
-		s := pathToWords(k)
-		t[s] = v
-	}
-	b, err := json.Marshal(t)
-	if err != nil{
-		return err
-	}
-	json.Unmarshal(b, s)
-	return nil
-}
-
 func pathToWords(p string) (s string) {
 	words := strings.Split(p, "/")
 	s = ""
