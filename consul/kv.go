@@ -12,6 +12,7 @@ import (
 	"shangwoa.com/http2"
 	"shangwoa.com/json2"
 	"shangwoa.com/log2"
+	"strings"
 )
 
 // KVValue consul里实际储存的键值。这个是当前暂时默认使用的结构，如果有其它的结构则需要另行定义。
@@ -54,11 +55,7 @@ type KVRedis struct {
 }
 
 type KV struct {
-	//ConsulKey *ConsulKey
 	Err *error
-	//b []byte
-	//url string
-	//Alias string
 	Key string
 	// KVStruct 自定义结构体，必须是个指针。优先判断使用这个
 	KVStruct interface{}
@@ -96,64 +93,6 @@ type Errors struct {
 	What    string `json:"What"`
 }
 
-//func GetKeys(url string, kvs []*KV) error {
-//	l := len(kvs)
-//	if l == 0 {
-//		err := errors.New("not enough paramaters")
-//		return err
-//	}
-//	body := ""
-//	for i := 0; i < l; i++ {
-//		kv := kvs[i]
-//		if len(body) > 0 {
-//			body += ","
-//		}
-//		body += `{
-//			"KV": {
-//			  "Verb": "get",
-//			  "Key": "` + kv.Key + `"
-//			}
-//		  }`
-//	}
-//	body = "[" + body + "]"
-//	var jsonStr = []byte(body)
-//
-//	r, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonStr))
-//	if err != nil {
-//		return err
-//	}
-//	r.Header.Set("X-Custom-Header", "myvalue")
-//	r.Header.Set("Content-Type", "application/json")
-//	b, err := http2.ClientDo(r, http2.GetEmptyClient())
-//	if err != nil {
-//		return err
-//	}
-//	//str := string(b)
-//	//fmt.Println(str)
-//	var txn TxnResult
-//	err = json.Unmarshal(b, &txn)
-//	if err != nil {
-//		fmt.Println("txn error", err)
-//		return err
-//	}
-//	if len(txn.Errors) > 0 {
-//		info := ""
-//		for _, e := range txn.Errors {
-//			info += fmt.Sprintf("txn error index is %d and Wath is %s \n", e.OpIndex, e.What)
-//		}
-//		info = "txn error is \n" + info
-//		err = errors.New(info)
-//		log2.Error(err)
-//		return err
-//	}
-//	for i := 0; i < l; i++ {
-//		err = parseValue(&txn.Results[i].KVRes, kvs[i])
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
 
 func GetKeys(url string, m map[string]*KV) error {
 	l := len(m)
@@ -187,8 +126,6 @@ func GetKeys(url string, m map[string]*KV) error {
 	if err != nil {
 		return err
 	}
-	//str := string(b)
-	//fmt.Println(str)
 	var txn TxnResult
 	err = json.Unmarshal(b, &txn)
 	if err != nil {
@@ -218,8 +155,6 @@ func GetKeys(url string, m map[string]*KV) error {
 
 func parseValue(res *KVRes, kv *KV) (err error) {
 	decodeBytes, err := base64.StdEncoding.DecodeString(res.Value)
-	//str := string(decodeBytes)
-	//fmt.Println(str)
 	if err != nil {
 		kv.Err = &err
 		return
@@ -231,15 +166,12 @@ func parseValue(res *KVRes, kv *KV) (err error) {
 			return
 		}
 	} else if kv.KVJSONB != nil {
-		kv.KVJSONB = &json2.JSONB{}
 		err = json.Unmarshal(decodeBytes, kv.KVJSONB)
 		if err != nil {
 			kv.Err = &err
 			return
 		}
 	} else if kv.KVValue != nil {
-		//v := &KVValue{}
-		//kv.KVValue = v
 		v := kv.KVValue
 		err = json.Unmarshal(decodeBytes, v)
 		if err != nil {
@@ -268,4 +200,27 @@ func parseValue(res *KVRes, kv *KV) (err error) {
 		kv.KVStringValue = string(decodeBytes)
 	}
 	return nil
+}
+
+func MapToStruct(m map[string]*KV, s interface{}) error {
+	t := map[string]*KV{}
+	for k, v := range m{
+		s := pathToWords(k)
+		t[s] = v
+	}
+	b, err := json.Marshal(t)
+	if err != nil{
+		return err
+	}
+	json.Unmarshal(b, s)
+	return nil
+}
+
+func pathToWords(p string) (s string) {
+	words := strings.Split(p, "/")
+	s = ""
+	for _, v := range words{
+		s += strings.Title(v)
+	}
+	return
 }

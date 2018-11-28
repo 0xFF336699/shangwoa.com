@@ -2,7 +2,6 @@ package io2
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 )
