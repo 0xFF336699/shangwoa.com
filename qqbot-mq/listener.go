@@ -2,6 +2,7 @@ package qqbot_mq
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"shangwoa.com/rabbitmq"
@@ -36,13 +37,13 @@ func CreateListener(port int, path string) (*Listener) {
 		if err := json.Unmarshal(buffer, &m);err != nil{
 			return
 		}
-		selfID := m["self_id"].(int)
+		selfID := int(m["self_id"].(float64))
 		qname := strconv.Itoa(selfID)
 		const c = "._."
 		switch m[PostType] {
 		case PostTypeMessage:
 			qname += c + PostTypeMessage
-			switch m[RequestType] {
+			switch m[MessageType] {
 			case MessageTypePrivate:
 				qname += c + MessageTypePrivate
 				break
@@ -106,9 +107,10 @@ func CreateListener(port int, path string) (*Listener) {
 
 func sendMsg(mq string, qname string, body []byte)  {
 
+	fmt.Println("qname is", qname, mq)
 	//err := rabbitmq.PublishByDefault("post_media_order:downloaded", "amqp://ig-crawler:ig-crawler@rabbitmq.hb.ms.shangwoa.com:8231/ig-crawler", body)
 	err := rabbitmq.PublishByDefault(qname, mq, body)
 	if err != nil {
-
+		fmt.Println("publish error", err.Error())
 	}
 }
