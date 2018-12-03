@@ -46,6 +46,8 @@ type Friend  struct {
 	Excluede [] *FriendExcluede `json:"excluede"`
 	Special [] *FriendSpecial `json:"special"`
 	Def *FriendDef `json:"def"`
+	ExcludeMap map[int]*FriendExcluede
+	SpecialMap map[int]*FriendSpecial
 }
 
 
@@ -71,6 +73,8 @@ type Group struct {
 	Exclude []*GroupExclude `json:"exclude"`
 	Special []*GroupSpecial `json:"special"`
 	Def     *GroupDef        `json:"def"`
+	ExcluedMap map[int]*GroupExclude
+	SpecialMap map[int]*GroupSpecial
 }
 
 type Bot struct {

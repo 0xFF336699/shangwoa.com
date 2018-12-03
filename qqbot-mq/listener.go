@@ -38,7 +38,9 @@ func CreateListener(port int, path string) (*Listener) {
 			return
 		}
 		selfID := int(m["self_id"].(float64))
+		bot := model.Bots[selfID]
 		qname := strconv.Itoa(selfID)
+		jump := ""
 		const c = "._."
 		switch m[PostType] {
 		case PostTypeMessage:
@@ -46,15 +48,32 @@ func CreateListener(port int, path string) (*Listener) {
 			switch m[MessageType] {
 			case MessageTypePrivate:
 				qname += c + MessageTypePrivate
+				userID := int(m["user_id"].(float64))
+				if _, ok := bot.Friend.ExcludeMap[userID]; ok{
+					jump = "exclude"
+					break
+				}
+				if _, ok := bot.Friend.SpecialMap[userID]; ok{
+					qname += c + strconv.Itoa(userID)
+				}
 				break
 			case MessageTypeGroup:
 				qname += c + MessageTypeGroup
+				groupID := int(m["group_id"].(float64))
+				if _, ok := bot.Group.ExcluedMap[groupID]; ok{
+					jump = "exclude"
+					break
+				}
+				if _, ok := bot.Group.SpecialMap[groupID]; ok{
+					qname += c + strconv.Itoa(groupID)
+				}
 				break
 			case MessageTypeDiscuss:
 				qname += c + MessageTypeDiscuss
 				break
 			default:
-				return // error
+				jump = MessageType + "error"
+				//return // error
 			}
 			break
 		case PostTypeEvent:
@@ -92,7 +111,10 @@ func CreateListener(port int, path string) (*Listener) {
 		default:
 			return // it's an error
 		}
-		bot := model.Bots[selfID]
+		if jump != ""{
+			fmt.Println("jump is ", jump)
+			return
+		}
 		sendMsg(bot.Mq.Amqp, qname, buffer);
 	})
 
@@ -104,7 +126,9 @@ func CreateListener(port int, path string) (*Listener) {
 	}()
 	return l
 }
-
+func checkPrivateID()  {
+	
+}
 func sendMsg(mq string, qname string, body []byte)  {
 
 	fmt.Println("qname is", qname, mq)

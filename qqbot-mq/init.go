@@ -64,10 +64,27 @@ func loadMqConf() {
 	for _, m := range mqconfs{
 		fmt.Println("%#v", m)
 		for _, b := range m.Bots{
+			for _, f := range b.Friend.Excluede{
+				b.Friend.ExcludeMap = map[int]*FriendExcluede{}
+				b.Friend.ExcludeMap[f.ID] = f
+			}
+			for _, s := range b.Friend.Special{
+				b.Friend.SpecialMap = map[int]*FriendSpecial{}
+				b.Friend.SpecialMap[s.ID] = s
+			}
+			for _, e := range b.Group.Exclude{
+				b.Group.ExcluedMap = map[int]*GroupExclude{}
+				b.Group.ExcluedMap[e.ID] = e
+			}
+			for _, s := range b.Group.Special{
+				b.Group.SpecialMap = map[int]*GroupSpecial{}
+				b.Group.SpecialMap[s.ID] = s
+			}
 			b.Mq = m
 			model.Bots[b.BotID] = b
 		}
 		//CreateListener(h.Port, h.Path)
 	}
-	println(model)
+	b:= model.Bots
+	println(b)
 }
