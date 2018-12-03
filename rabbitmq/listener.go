@@ -28,7 +28,7 @@ func retryListen(exec func(d *amqp.Delivery) error, onError func(qname string, e
 }
 
 func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err error, extra string) bool, url string, qd *QueueDeclare, qb *QueueBind, qos *Qos, consume *Consume, zombieTriggerTime time.Duration, retryCount int, retryAlarmCount int) {
-	return 
+	//return
 	ch, err := GetChannelByDefaultRetries(url)
 	if err != nil {
 		go waitingRetryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
@@ -84,60 +84,6 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 		go waitingRetryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
 		return
 	}
-	//ticker := time.NewTicker(zombieTriggerTime * time.Second)
-	//isGone := false
-	//forever := make(chan bool)
-	//breakMsgs := make(chan bool)
-	//
-	//go func() {
-	//	fmt.Println("listen msgs")
-	//	retryCount = 0
-	//	for {
-	//		select {
-	//		case d := <-msgs:
-	//			ticker.Stop()
-	//			if len(d.Body) > 0 && isGone == false {
-	//				err := exec(&d)
-	//				if err != nil {
-	//					stopedOnError = onError(qd.Queue, err, string(d.Body))
-	//				}
-	//			} else if len(d.Body) == 0 {
-	//
-	//			}
-	//
-	//			if stopedOnError {
-	//				// 这样会导致后续的也不再执行，所以应该有启动提醒程序猿立即解决机制
-	//				isGone = true
-	//				forever <- false
-	//				goto END
-	//			}
-	//			d.Ack(false)
-	//			ticker = time.NewTicker(zombieTriggerTime * time.Second)
-	//		case <-breakMsgs:
-	//			isGone = true
-	//			goto END
-	//		}
-	//	}
-	//END:
-	//}()
-	//
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-ticker.C:
-	//			if !stopedOnError {
-	//				go retryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
-	//			}
-	//			fmt.Println("time over")
-	//			ticker.Stop()
-	//			isGone = true
-	//			breakMsgs <- true
-	//			forever <- false
-	//			goto END
-	//		}
-	//	}
-	//END:
-	//}()
 
 	ticker := time.NewTicker(zombieTriggerTime * time.Second)
 	isGone := false
