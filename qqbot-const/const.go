@@ -1,5 +1,6 @@
 package qqbot_const
 
+type ReceiverType string
 const (
 	PostTypeMessage = "message" //消息
 	PostTypeEvent = "event" //
@@ -23,4 +24,8 @@ const (
 
 	ReturnStatusNoBot = "no bot"
 	ReturnStatusOK = "ok"
+
+	ReceiverTypePrivate ReceiverType = "private"
+	ReceiverTypeGroup ReceiverType = "group"
+	ConnectCharacter = "::"
 )

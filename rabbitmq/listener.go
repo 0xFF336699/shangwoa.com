@@ -2,7 +2,6 @@ package rabbitmq
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -69,7 +68,7 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 		go waitingRetryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
 		return
 	}
-	fmt.Println("listening is", qd.Queue)
+	//fmt.Println("listening is", qd.Queue)
 	msgs, err := ch.Consume(
 		consume.Queue,       // queue
 		consume.ConsumerTag, // consumer

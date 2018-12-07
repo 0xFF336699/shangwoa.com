@@ -14,6 +14,7 @@ const (
 	BotResAsync = "async"
 	ApiGetLoginInfo = "get_login_info"
 	ApiSendPrivateMessage = "send_private_msg"
+	APISendGroupMessage = "send_group_msg"
 )
 type SendMsg struct {
 	Type string `json:"type"`
@@ -21,6 +22,11 @@ type SendMsg struct {
 }
 type SendPrivateMsg struct {
 	UserID int `json:"user_id"`
+	Message []*SendMsg `json:"message"`
+	AutoEscape bool `json:"auto_escape"`
+}
+type SendGroupMsg struct{
+	GroupID int `json:"group_id"`
 	Message []*SendMsg `json:"message"`
 	AutoEscape bool `json:"auto_escape"`
 }
@@ -34,6 +40,9 @@ type User struct{
 type SendPrivateMsgRes struct {
 	MessageID int32 `json:"message_id"`
 }
+type SendGroupMsgRes struct{
+	MessageID int32 `json:"message_id"`
+}
 type Bot struct {
 	url string
 	token string
@@ -45,6 +54,11 @@ type Bot struct {
 
 func CreateMsg(t string, data map[string]interface{}) (msg *SendMsg) {
 	msg = &SendMsg{t, data}
+	return
+}
+func CreateEnter()  (msg *SendMsg){
+	msg = &SendMsg{"text", map[string]interface{}{"text":`
+`}}
 	return
 }
 type BotRes struct {
@@ -71,7 +85,8 @@ func (bot *Bot) post(api string, data interface{}, resStruct interface{}) (err e
 		defer rb.Body.Close()
 	}
 	if err != nil {
-		panic(err)
+		s := err.Error()
+		panic(s)
 	}
 	buffer, err := ioutil.ReadAll(rb.Body)
 	res = &BotRes{}
@@ -118,12 +133,17 @@ func (bot *Bot) SendPrivateMsg(msg *SendPrivateMsg) (err error) {
 	err, _ = bot.post(ApiSendPrivateMessage, msg, res)
 	return
 }
+func (bot *Bot) SendGroupMsg(msg *SendGroupMsg) (err error) {
+	res := &SendGroupMsgRes{}
+	err, _ = bot.post(APISendGroupMessage, msg, res)
+	return
+}
 var bots = make(map[int64]*Bot)
-func CreateBot(id int64, token, url, path, screte string, port int,
+func CreateBot(id int64, token, url, path, secret string, port int,
 	botListener *BotListener) (err error, bot *Bot) {
-		botListener.ID = id
-	bot = &Bot{url:url,token:token, secret:screte, port:port}
+	bot = &Bot{url:url,token:token, secret:secret, port:port}
 	if botListener != nil{
+		botListener.ID = id
 		bot.Listener = CreateListener(port, path, botListener)
 	}
 	err, loginUser := bot.GetLoginInfo()
@@ -138,12 +158,12 @@ func CreateBot(id int64, token, url, path, screte string, port int,
 	return
 }
 
-func GetOrCreateBot(id int64, token, url, path, screte string, port int,
+func GetOrCreateBot(id int64, token, url, path, secret string, port int,
 	botListener *BotListener) (err error, bot *Bot)  {
 	bot, ok := bots[id]
 	if ok{
 		return
 	}
-	err, bot = CreateBot(id, token, url, path, screte, port, botListener)
+	err, bot = CreateBot(id, token, url, path, secret, port, botListener)
 	return
 }
