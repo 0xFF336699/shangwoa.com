@@ -85,8 +85,8 @@ func (bot *Bot) post(api string, data interface{}, resStruct interface{}) (err e
 		defer rb.Body.Close()
 	}
 	if err != nil {
-		s := err.Error()
-		panic(s)
+		//s := err.Error()
+		return
 	}
 	buffer, err := ioutil.ReadAll(rb.Body)
 	res = &BotRes{}

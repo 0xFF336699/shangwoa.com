@@ -67,6 +67,8 @@ func CreateListener(port int, path string) (*Listener) {
 				if _, ok := bot.Group.SpecialMap[groupID]; ok{
 					fmt.Println("it's sticker", string(buffer))
 					qname += c + strconv.Itoa(groupID)
+				}else{
+					fmt.Println("it's normal", string(buffer))
 				}
 				break
 			case MessageTypeDiscuss:
