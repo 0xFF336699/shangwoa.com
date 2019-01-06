@@ -93,7 +93,7 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string) {
 	var client http.Client
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("g")
+		//fmt.Println("g")
 		return
 	}
 	content, err := ioutil.ReadAll(res.Body)
