@@ -31,7 +31,7 @@ func CreateListener(port int, path string) (*Listener) {
 		defer request.Body.Close()
 		writer.WriteHeader(204)
 		buffer, _ := ioutil.ReadAll(request.Body)
-		println("buffer is", string(buffer))
+		//println("buffer is", string(buffer))
 		m := map[string]interface{}{}
 
 		if err := json.Unmarshal(buffer, &m);err != nil{
@@ -41,7 +41,7 @@ func CreateListener(port int, path string) (*Listener) {
 		bot := model.Bots[selfID]
 		qname := strconv.Itoa(selfID)
 		jump := ""
-		const c = "._."
+		const c = ConnectCharacter
 		switch m[PostType] {
 		case PostTypeMessage:
 			qname += c + PostTypeMessage
@@ -65,7 +65,10 @@ func CreateListener(port int, path string) (*Listener) {
 					break
 				}
 				if _, ok := bot.Group.SpecialMap[groupID]; ok{
+					fmt.Println("it's sticker", string(buffer))
 					qname += c + strconv.Itoa(groupID)
+				}else{
+					fmt.Println("it's normal", string(buffer))
 				}
 				break
 			case MessageTypeDiscuss:
@@ -73,7 +76,6 @@ func CreateListener(port int, path string) (*Listener) {
 				break
 			default:
 				jump = MessageType + "error"
-				//return // error
 			}
 			break
 		case PostTypeEvent:
@@ -126,14 +128,15 @@ func CreateListener(port int, path string) (*Listener) {
 	}()
 	return l
 }
-func checkPrivateID()  {
-	
+func SendMsg(mq, qname string, body []byte) {
+	sendMsg(mq, qname, body)
 }
 func sendMsg(mq string, qname string, body []byte)  {
 
-	fmt.Println("qname is", qname, mq)
+	//fmt.Println("qname is", qname, mq)
 	//err := rabbitmq.PublishByDefault("post_media_order:downloaded", "amqp://ig-crawler:ig-crawler@rabbitmq.hb.ms.shangwoa.com:8231/ig-crawler", body)
-	err := rabbitmq.PublishByDefault(qname, mq, body)
+	//err := rabbitmq.PublishByDefault(qname, mq, body)
+	err := rabbitmq.Publish(qname, "amq.direct", qname, "direct", mq, body)
 	if err != nil {
 		fmt.Println("publish error", err.Error())
 	}

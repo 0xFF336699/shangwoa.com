@@ -84,3 +84,7 @@ type Bot struct {
 	Group *Group `json:"group"`
 	Mq *Mq
 }
+
+type MqQueue struct{
+	Kind string `json:"kind"` //
+}
