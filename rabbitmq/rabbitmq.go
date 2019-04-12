@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
 
@@ -144,7 +145,9 @@ var DefaultConnConf *ConnectionConf
 //}
 
 func GetConn(url string, retries *retry.Retries) (*amqp.Connection, error) {
+	fmt.Println("Get conn url is", url, retries.Retry.Count)
 	conn, err := getConn(url, retries)
+
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +197,7 @@ func GetChannel(url string, connRetries *retry.Retries, channelRetries *retry.Re
 	}
 	ch, err := conn.conn.Channel()
 	if err != nil {
+		fmt.Println("GetChannel conn.con.Channel error", err.Error())
 		conn, err = reconnectConn(url, connRetries)
 		if err != nil {
 			return nil, err

@@ -2,6 +2,7 @@ package pg
 
 import (
 	"database/sql"
+	"github.com/lib/pq"
 
 	"time"
 
@@ -60,4 +61,11 @@ func CreateConnector(params string) *io2.Connector {
 		}, MaxSeq: 2000,
 		RetryDelay: time.Second * 2,
 	}
+}
+
+func IsUniqueError(e error) (bool) {
+	if err, ok := e.(pq.PGError); ok && err.Get('C') == "23505"{
+		return true
+	}
+	return false
 }

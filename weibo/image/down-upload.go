@@ -99,6 +99,7 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 		w.ch <- w
 		return
 	}
+
 	err, pid := this.uploader.Upload(u)
 	if err != nil{
 		fmt.Println("weibo upload error", w.url, err.Error())
@@ -122,6 +123,7 @@ func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
 	if err != nil{
 		println("remove file has error", w.filename, err.Error())
 	}
+	fmt.Println("removed file", w.filename, w.url, err)
 	index := -1
 	for i, v := range this.waitingUrls{
 		if v == w{

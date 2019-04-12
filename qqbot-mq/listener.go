@@ -20,6 +20,7 @@ type Listener struct{
 }
 var listeners = make(map[string]*Listener)
 func CreateListener(port int, path string) (*Listener) {
+	fmt.Println("create listener", port, path);
 	url := strconv.Itoa(port) + path
 	if l, ok := listeners[url]; ok{
 		return l
@@ -65,10 +66,10 @@ func CreateListener(port int, path string) (*Listener) {
 					break
 				}
 				if _, ok := bot.Group.SpecialMap[groupID]; ok{
-					fmt.Println("it's sticker", string(buffer))
+					//fmt.Println("it's sticker", string(buffer))
 					qname += c + strconv.Itoa(groupID)
 				}else{
-					fmt.Println("it's normal", string(buffer))
+					//fmt.Println("it's normal", string(buffer))
 				}
 				break
 			case MessageTypeDiscuss:
@@ -138,6 +139,8 @@ func sendMsg(mq string, qname string, body []byte)  {
 	//err := rabbitmq.PublishByDefault(qname, mq, body)
 	err := rabbitmq.Publish(qname, "amq.direct", qname, "direct", mq, body)
 	if err != nil {
-		fmt.Println("publish error", err.Error())
+		fmt.Println("publish error", err.Error(), string(body))
+	}else{
+		fmt.Println("publish ok", string(body))
 	}
 }

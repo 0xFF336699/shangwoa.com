@@ -12,6 +12,7 @@ func GetRandomUrl(pid, size string) (err error, url string) {
 	if err != nil{
 		return
 	}
+	// https://ww1.sinaimg.cn/large/007aNjkZly1g1xea9tan2j30q90hitb1
 	url = "https://ww" + strconv.Itoa(i) + ".sinaimg.cn/" + size + "/" + pid
 	return
 }

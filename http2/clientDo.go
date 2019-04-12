@@ -2,11 +2,12 @@ package http2
 
 import (
 	"io"
-	"net/http"
 	"io/ioutil"
+	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"shangwoa.com/image2"
 	"time"
 )
 var UserAgent = `Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36`
@@ -101,6 +102,10 @@ func FileDownloader(filename, url string, useProxy bool) (err error, file string
 		return
 	}
 	_, err = io.Copy(f, res.Body)
+	if err !=nil{
+		return
+	}
+	w, h = image2.GetDimensions(f)
 	return
 }
 
