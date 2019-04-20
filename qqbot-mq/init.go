@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"shangwoa.com/os2"
+	"shangwoa.com/rabbitmq"
 )
 
 func init()  {
+	pcs = map[string]*rabbitmq.PubChannel{}
 	initFlags()
 	loadLocalConfig()
 	loadMqConf()
@@ -62,7 +64,7 @@ func loadMqConf() {
 		mqconfs = append(mqconfs, temps...)
 	}
 	for _, m := range mqconfs{
-		fmt.Println("%#v", m)
+		fmt.Println("load regist config %#v", m)
 		for _, b := range m.Bots{
 			b.Friend.ExcludeMap = map[int]*FriendExcluede{}
 			for _, f := range b.Friend.Excluede{

@@ -7,12 +7,11 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"shangwoa.com/image2"
 	"time"
 )
 var UserAgent = `Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36`
 
-type FileDownload func(url, p string)(err error, path string, w, h int)
+type FileDownload func(url, p string)(err error, path string)
 func GetReq(url string) (r *http.Request, err error) {
 	r, err = http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -88,7 +87,7 @@ func ClientDo(r *http.Request, client *http.Client) (content []byte, err error) 
 	return
 }
 
-func FileDownloader(filename, url string, useProxy bool) (err error, file string, w, h int) {
+func FileDownloader(filename, url string, useProxy bool) (err error, file string) {
 	//filename = "c:\\x.jpg"
 	file = filename
 	err, res := GetBody(url, useProxy)
@@ -105,12 +104,11 @@ func FileDownloader(filename, url string, useProxy bool) (err error, file string
 	if err !=nil{
 		return
 	}
-	w, h = image2.GetDimensions(f)
 	return
 }
 
 func NewFileDownloader(useproxy bool)(FileDownload)  {
-	return func(url, filename string)(err error, path string, w ,h int){
+	return func(url, filename string)(err error, path string){
 		return FileDownloader(filename, url, useproxy)
 	}
 }

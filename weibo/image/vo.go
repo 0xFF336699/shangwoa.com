@@ -26,7 +26,7 @@ type DownUploadInfo struct{
 	List []*ImageInfo `json:"list,omitempty"`
 	MqInfo *MqInfo    `json:"mq_info,omitempty"`
 	UseProxy bool     `json:"use_proxy,omitempty"`
-	ID int `json:"id,omitempty"` // 用来识别校验的
+	ID string `json:"id,omitempty"` // 用来识别校验的
 
 }
 func ParseImageList(josnBytes []byte)(err error, info *DownUploadInfo){
@@ -38,10 +38,6 @@ func ParseImageList(josnBytes []byte)(err error, info *DownUploadInfo){
 		err = errors.New("no qname")
 		return
 	}
-	//if len(info.MqInfo.RoutingKey) == 0{
-	//	err = errors.New("no routing key")
-	//	return
-	//}
 	if len(info.MqInfo.Kind) == 0{
 		info.MqInfo.Kind = "direct"
 	}

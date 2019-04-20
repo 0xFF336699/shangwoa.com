@@ -123,3 +123,15 @@ func Publish2(url string, p *amqp.Publishing, exchangeDeclare func(ch *amqp.Chan
 	return
 }
 
+
+func Publish3(ch *amqp.Channel, p *amqp.Publishing, exchangeDeclare func(ch *amqp.Channel)(error), publish func(ch *amqp.Channel, p *amqp.Publishing)(error))(err error)  {
+	err = exchangeDeclare(ch)
+	if err != nil{
+		return
+	}
+	err = publish(ch, p)
+	if err != nil{
+		return
+	}
+	return
+}

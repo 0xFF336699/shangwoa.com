@@ -15,7 +15,7 @@ type DownUploader struct {
 	tempPath string
 	loadingCookieRetryCount int
 	isLoadingCookies bool
-	GetCookies GetCookies
+	GetCookies GetCookies// 从shangwoa那边注入进来 file-down-upload.go
 	DownLoader http2.FileDownload
 	waitingUrls []*WaitingUrl
 	uploader *ImageUploader
@@ -91,7 +91,7 @@ func (this *DownUploader) checkWorkOk() {
 func (this *DownUploader)downUpload(w *WaitingUrl)  {
 	defer this.waitingUrlWorkDown(w)
 	fmt.Println("downupload start ", w.url)
-	err, u, width, height := this.DownLoader(w.url, w.filename)
+	err, u:= this.DownLoader(w.url, w.filename)
 	if err != nil{
 		fmt.Println("weibo downloader error", w.url, err.Error())
 		w.Err = err
@@ -100,7 +100,7 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 		return
 	}
 
-	err, pid := this.uploader.Upload(u)
+	err, pid, width, height := this.uploader.Upload(u)
 	if err != nil{
 		fmt.Println("weibo upload error", w.url, err.Error())
 		this.cookieIsAvailable = false
@@ -113,17 +113,13 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 	w.Pid = pid
 	w.Width = width
 	w.Height = height
-	fmt.Println("downupload start complete", w.url)
+	fmt.Println("downupload complete", w.url)
 	w.ch <- w
 	return
 }
 
 func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
-	err := os.Remove(w.filename)
-	if err != nil{
-		println("remove file has error", w.filename, err.Error())
-	}
-	fmt.Println("removed file", w.filename, w.url, err)
+	go removeFile(w.filename)
 	index := -1
 	for i, v := range this.waitingUrls{
 		if v == w{
@@ -134,4 +130,11 @@ func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
 	if index > -1{
 		this.waitingUrls = append(this.waitingUrls[:index], this.waitingUrls[index + 1:]...)
 	}
+}
+
+func removeFile(f string) (err error) {
+	time.Sleep(1000)
+	err = os.Remove(f)
+	fmt.Println("down-upload removeFile", f, err)
+	return
 }

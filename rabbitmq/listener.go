@@ -33,6 +33,11 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 		go waitingRetryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
 		return
 	}
+	//leave := func() {
+	//	ch.Close()
+	//	ch = nil
+	//	killConn(url)
+	//}
 	defer ch.Close()
 	_, err = ch.QueueDeclare(
 		qd.Queue,      // name
@@ -107,6 +112,7 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 
 				}
 				if stopedOnError {
+					d.Ack(false)
 					close(breakMsgs)
 					// 这样会导致后续的也不再执行，所以应该有启动提醒程序猿立即解决机制
 					goto END
@@ -133,6 +139,7 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 						isGone = true
 						breakMsgs <- true
 						ch.Close()
+						//leave()
 						ticker.Stop()
 						if !stopedOnError {
 							go retryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)

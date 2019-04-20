@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -49,7 +54,7 @@ type Pic2 struct {
 	Name string `json:"name"`
 }
 
-func (this *ImageUploader) Upload(filePath string) (err error, pid string) {
+func (this *ImageUploader) Upload(filePath string) (err error, pid string, w, h int) {
 
 	//uploadURL := "http://picupload.service.weibo.com/interface/pic_upload.php?ori=1&mime=image%2Fjpeg&data=base64&url=0&markpos=1&logo=&nick=0&marks=1&app=miniblog"
 	uploadURL := "http://picupload.service.weibo.com/interface/pic_upload.php?mime=image%2Fjpeg&data=base64&url=0&markpos=1&logo=&nick=0&marks=1&app=miniblog"
@@ -64,11 +69,25 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string) {
 	srcFile, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalf("%Open source file failed: s\n", err)
+		return
+	}
+	c, _, err := image.DecodeConfig(srcFile)
+	if err == nil{
+		w = c.Width
+		h = c.Height
+	}
+	srcFile.Close()
+	time.Sleep(1)
+	srcFile, err = os.Open(filePath)
+	if err != nil {
+		log.Fatalf("%Open source file failed: s\n", err)
+		return
 	}
 	defer srcFile.Close()
 	_, err = io.Copy(formFile, srcFile)
 	if err != nil {
 		log.Fatalf("Write to form file falied: %s\n", err)
+		return
 	}
 
 	// 发送表单
@@ -80,7 +99,7 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string) {
 	//}
 	req, err := http.NewRequest("POST", uploadURL, buf)
 	if err != nil {
-		fmt.Println("f")
+		fmt.Println("image-uuploader Upload err", err.Error())
 		return
 	}
 	t := writer.FormDataContentType()

@@ -164,9 +164,22 @@ func getConn(url string, retries *retry.Retries) (*connection, error) {
 		m.m.Store(url, conn)
 		return conn, err
 	}
+	fmt.Println("use old connection url is", url)
 	return conn.(*connection), nil
 }
 
+func killConn(url string) (err error) {
+	conn, ok := m.m.Load(url)
+	if ok{
+		c := conn.(*connection)
+		if c != nil{
+			if c.conn != nil{
+				c.conn.Close()
+			}
+		}
+	}
+	return
+}
 func createconn(url string, retries *retry.Retries) (*connection, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {

@@ -49,6 +49,7 @@ func RetryDoInteralFunc(f func()(err error, res interface{}), retryFunc func(cou
 	for{
 		var e error
 		e, res = f()
+		count ++
 		if e != nil{
 			if retryFunc(count){
 				return
