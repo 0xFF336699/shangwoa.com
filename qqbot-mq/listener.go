@@ -32,7 +32,7 @@ func CreateListener(port int, path string) (*Listener) {
 		defer request.Body.Close()
 		writer.WriteHeader(204)
 		buffer, _ := ioutil.ReadAll(request.Body)
-		//println("buffer is", string(buffer))
+		println("buffer is", string(buffer))
 		m := map[string]interface{}{}
 
 		if err := json.Unmarshal(buffer, &m);err != nil{
@@ -171,7 +171,9 @@ func sendMsg(mq string, qname string, body []byte)  {
 		fmt.Println("publish apply channel error", err.Error(), string(body))
 		return
 	}
+	fmt.Println("befor publish")
 	err = pc.Publish(body)
+	fmt.Println("afeter publish")
 	if err != nil{
 		fmt.Println("publish error", err.Error(), string(body))
 		cancelPc(mq, qname)// 没有做后续处理
@@ -182,16 +184,4 @@ func sendMsg(mq string, qname string, body []byte)  {
 
 func cancelPc(mq, qname string)  {
 	delete(pcs, mq + "_" + qname)
-}
-func sendMsg2(mq string, qname string, body []byte)  {
-
-	//fmt.Println("qname is", qname, mq)
-	//err := rabbitmq.PublishByDefault("post_media_order:downloaded", "amqp://ig-crawler:ig-crawler@rabbitmq.hb.ms.shangwoa.com:8231/ig-crawler", body)
-	//err := rabbitmq.PublishByDefault(qname, mq, body)
-	err := rabbitmq.Publish(qname, "amq.direct", qname, "direct", mq, body)
-	if err != nil {
-		fmt.Println("publish error", err.Error(), string(body))
-	}else{
-		fmt.Println("publish ok", string(body))
-	}
 }

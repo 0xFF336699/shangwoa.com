@@ -9,21 +9,31 @@ import (
 
 func main()  {
 	f := make(chan int)
-	go consume()
-	//testChannel()
-	tickOldPublish()
+	go consume("test1")
+	go consume("test2")
+	testChannel()
+	//tickOldPublish()
 	<-f
 }
+const(
+	testChannelExchange = "amq.fanout"
+	//testChannelExchange = "amq.direct"
+	//testChannelKind = "direct"
+	testChannelKind = "fanout"
+	testChannelQname = "test"
+)
+func consume(qname string) {
 
-func consume() {
-
-	qname := "test"
+	//qname := testChannelQname
 	qd := &rabbitmq.QueueDeclare{Queue: qname, Durable: true,AutoDelete:false}
-	qb := &rabbitmq.QueueBind{Queue: qname, RoutingKey: qname, Exchange: "amq.direct"}
+	qb := &rabbitmq.QueueBind{Queue: qname, RoutingKey: qname, Exchange: testChannelExchange}
 	qos := &rabbitmq.Qos{PrefetchCount: 1, PrefetchSize: 0}
 	consume := &rabbitmq.Consume{Queue: qname, ConsumerTag: ""}
 	fmt.Println("listen post ", qname, "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album")
-	rabbitmq.Listen(onMessage, onError, "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album", qd, qb, qos, consume, time.Duration(60),0, 20)
+	rabbitmq.Listen(func(d *amqp.Delivery) (err error) {
+		fmt.Println("on message", qname, string(d.Body))
+		return
+	}, onError, "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album", qd, qb, qos, consume, time.Duration(60),0, 20)
 }
 func onMessage(d *amqp.Delivery) (err error) {
 	fmt.Println("on message", string(d.Body))
@@ -46,10 +56,10 @@ func onError(qname string, err error, extra string) bool {
 func testChannel() {
 	args := &rabbitmq.ChannelArgs{
 		URL:"amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album",
-		Exchange:"amq.direct",
-		Qname:"test",
-		Kind:"direct",
-		RoutingKey:"test",
+		Exchange:testChannelExchange,
+		Qname:testChannelQname,
+		Kind:testChannelKind,
+		RoutingKey:testChannelQname,
 		Durable:true,
 		Mandatory:false,
 		Immediate:false,

@@ -165,8 +165,6 @@ func (this *ArrayJsonb) UnmarshalJSON(b []byte) error {
 		}
 	}
 	return nil
-
-	return nil
 }
 
 //

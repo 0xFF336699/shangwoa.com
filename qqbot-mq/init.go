@@ -9,6 +9,7 @@ import (
 )
 
 func init()  {
+	fmt.Println("begin init")
 	pcs = map[string]*rabbitmq.PubChannel{}
 	initFlags()
 	loadLocalConfig()
@@ -43,7 +44,7 @@ func loadLocalConfig() {
 	for _, h := range hosts{
 		CreateListener(h.Port, h.Path)
 	}
-	println(hosts)
+	fmt.Printf("hosts is %#v\n", hosts)
 }
 func loadMqConf() {
 	files, err := filepath.Glob(flagConfFolder + "/mq/*.json")

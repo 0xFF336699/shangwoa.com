@@ -57,7 +57,7 @@ func (this *PubChannel)Publish(body []byte)(err error){
 			isClosed = true
 		}
 		return
-	}, func(count int) (jump bool) {
+	}, func(count int, err error) (jump bool) {
 		if count >= args.RetryMaxCount || isClosed{
 			return true
 		}
@@ -75,10 +75,12 @@ func PublishChannel(args *ChannelArgs)(err error, ch *amqp.Channel)  {
 		return
 	}, args.RetryMaxCount, args.InteralTime)
 	if err != nil{
+		fmt.Println("PublishChannel error is", err.Error())
 		return
 	}
 	ch = res.(*amqp.Channel)
 	if ch == nil{
+		fmt.Println("PublishChannel not a channel")
 		return errors.New("not a channel"), nil
 	}
 	err, _, _ = retry.RetryDoInteralTimeIncr(func() (err error, res interface{}) {
@@ -95,6 +97,9 @@ func PublishChannel(args *ChannelArgs)(err error, ch *amqp.Channel)  {
 	if err != nil{
 		return
 	}
+	//err, _, _ = retry.RetryDoInteralTimeIncr(func() (err error, res interface{}) {
+	//	return ch.QueueBind(args.Qname, args.RoutingKey, args.Exchange, args.NoWait, args.Args), nil
+	//}, args.RetryMaxCount, args.InteralTime)
 	return
 }
 

@@ -44,14 +44,14 @@ func RetryDoInteralTimeIncr(f func()(err error, res interface{}), retryMaxCount 
 	}
 }
 
-func RetryDoInteralFunc(f func()(err error, res interface{}), retryFunc func(count int)(jump bool)) (err error, res interface{}, count int) {
+func RetryDoInteralFunc(f func()(err error, res interface{}), retryFunc func(count int, err error)(jump bool)) (err error, res interface{}, count int) {
 	count = 0
 	for{
 		var e error
 		e, res = f()
 		count ++
 		if e != nil{
-			if retryFunc(count){
+			if retryFunc(count, e){
 				return
 			}
 		}

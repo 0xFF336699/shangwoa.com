@@ -96,6 +96,7 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 	activeCh := make(chan bool)
 	breakMsgs := make(chan bool)
 	var stopedOnError bool
+	_, _ = isGone, isActive
 	go func() {
 		retryCount = 0
 		for {
@@ -113,8 +114,12 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 				}
 				if stopedOnError {
 					d.Ack(false)
+					breakMsgs <- true
+					go retryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
 					close(breakMsgs)
-					// 这样会导致后续的也不再执行，所以应该有启动提醒程序猿立即解决机制
+					ticker.Stop()
+					forever <- false
+					//// 这样会导致后续的也不再执行，所以应该有启动提醒程序猿立即解决机制
 					goto END
 				}
 				ticker = time.NewTicker(zombieTriggerTime * time.Second)
@@ -128,32 +133,32 @@ func Listen(exec func(d *amqp.Delivery) error, onError func(qname string, err er
 	END:
 	}()
 
-	go func() {
-		for {
-			select {
-			case bl := <-activeCh:
-				isActive = bl
-			case <-ticker.C:
-				if !isActive {
-					if !isGone {
-						isGone = true
-						breakMsgs <- true
-						ch.Close()
-						//leave()
-						ticker.Stop()
-						if !stopedOnError {
-							go retryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
-						}
-						forever <- false
-						goto END
-					}
-				} else {
-					activeCh <- false
-				}
-			}
-		}
-	END:
-	}()
+	//go func() {
+	//	for {
+	//		select {
+	//		case bl := <-activeCh:
+	//			isActive = bl
+	//		case <-ticker.C:
+	//			if !isActive {
+	//				if !isGone {
+	//					isGone = true
+	//					breakMsgs <- true
+	//					ch.Close()
+	//					//leave()
+	//					ticker.Stop()
+	//					if !stopedOnError {
+	//						go retryListen(exec, onError, url, qd, qb, qos, consume, zombieTriggerTime, retryCount, retryAlarmCount)
+	//					}
+	//					forever <- false
+	//					goto END
+	//				}
+	//			} else {
+	//				activeCh <- false
+	//			}
+	//		}
+	//	}
+	//END:
+	//}()
 	<-forever
 	msgs = nil
 	close(activeCh)
