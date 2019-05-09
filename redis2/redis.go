@@ -33,3 +33,23 @@ func SetDefaultClient(addr, pw string, db int) (err error, client *redis.Client)
 	Client = client
 	return
 }
+
+func Create(opt *redis.Options)(err error, client *redis.Client)  {
+	client = redis.NewClient(opt)
+	_, err = client.Ping().Result()
+	if err != nil{
+		return
+	}
+	return
+}
+func GetClient(opt *redis.Options) (err error, client *redis.Client) {
+	client, ok := clients[opt.DB]
+	if !ok{
+		err, client = Create(opt)
+		if err != nil{
+			return
+		}
+		clients[opt.DB] = client
+	}
+	return
+}

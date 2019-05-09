@@ -12,6 +12,7 @@ type ImageInfo struct {
 	ErrMsg string `json:"err_msg,omitempty"`
 	Width int `json:"width,omitempty"`
 	Height int `json:"height,omitempty"`
+	Disabled bool `json:"disabled,omitempty"`
 }
 
 type MqInfo struct {

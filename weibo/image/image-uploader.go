@@ -110,9 +110,10 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string, w, h 
 	//userAgent := `Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`
 	//req.Header.Set("User-Agent", userAgent)
 	var client http.Client
+	fmt.Println("weibo start upload")
 	res, err := client.Do(req)
 	if err != nil {
-		//fmt.Println("g")
+		fmt.Println("weibo upload error", err.Error())
 		return
 	}
 	content, err := ioutil.ReadAll(res.Body)

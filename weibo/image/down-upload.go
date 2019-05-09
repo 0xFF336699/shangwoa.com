@@ -95,7 +95,7 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 	if err != nil{
 		fmt.Println("weibo downloader error", w.url, err.Error())
 		w.Err = err
-		w.Pid = u
+		//w.Pid = u
 		w.ch <- w
 		return
 	}
@@ -106,7 +106,7 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 		this.cookieIsAvailable = false
 		go this.loadCookies()
 		w.Err = err
-		w.Pid = pid
+		//w.Pid = pid
 		w.ch <- w
 		return
 	}

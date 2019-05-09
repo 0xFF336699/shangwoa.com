@@ -17,7 +17,9 @@ func GetReq(url string) (r *http.Request, err error) {
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", UserAgent)
+	r.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)")
+	//r.Header.Set("User-Agent", UserAgent)
+	//r.Header.Set("Referer", "http://www.mmonly.cc/tag/omyjhgf/")
 	return
 }
 var proxy func(req *http.Request)(url *url.URL, err error)
