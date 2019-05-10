@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"shangwoa.com/http2"
+	"shangwoa.com/os2"
 	"time"
 )
 
@@ -119,7 +120,12 @@ func (this *DownUploader)downUpload(w *WaitingUrl)  {
 }
 
 func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
-	go removeFile(w.filename)
+	go func() {
+		err := removeFile(w.filename)
+		if err != nil{
+			fmt.Println("weibo image down-upload waiting url work down has error", err.Error())
+		}
+	}()
 	index := -1
 	for i, v := range this.waitingUrls{
 		if v == w{
@@ -133,6 +139,13 @@ func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
 }
 
 func removeFile(f string) (err error) {
+	err, isExists := os2.IsFile(f)
+	if err != nil {
+		return
+	}
+	if !isExists{
+		return os2.NotAFile
+	}
 	time.Sleep(1000)
 	err = os.Remove(f)
 	fmt.Println("down-upload removeFile", f, err)
