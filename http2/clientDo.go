@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -29,6 +30,7 @@ func init()  {
 		//proxyUrl, err := url.Parse("http://127.0.0.1:1080")
 		proxyUrl, err := url.Parse(proxyUrl)
 		if err != nil{
+			fmt.Println("cient do panic", proxyUrl)
 			panic(err)
 		}
 		proxy = http.ProxyURL(proxyUrl)

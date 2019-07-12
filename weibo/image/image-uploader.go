@@ -62,13 +62,13 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string, w, h 
 	writer := multipart.NewWriter(buf)
 	formFile, err := writer.CreateFormFile("pic1", filePath)
 	if err != nil {
-		log.Fatalf("Create form file failed: %s\n", err)
+		log.Println("Create form file failed: %s\n", err)
 	}
 
 	// 从文件读取数据，写入表单
 	srcFile, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("%Open source file failed: s\n", err)
+		log.Println("%Open source file failed: s\n", err)
 		return
 	}
 	c, _, err := image.DecodeConfig(srcFile)
@@ -77,16 +77,16 @@ func (this *ImageUploader) Upload(filePath string) (err error, pid string, w, h 
 		h = c.Height
 	}
 	srcFile.Close()
-	time.Sleep(1)
+	time.Sleep(time.Millisecond * 300)
 	srcFile, err = os.Open(filePath)
 	if err != nil {
-		log.Fatalf("%Open source file failed: s\n", err)
+		log.Println("%Open source file failed: s\n", err)
 		return
 	}
 	defer srcFile.Close()
 	_, err = io.Copy(formFile, srcFile)
 	if err != nil {
-		log.Fatalf("Write to form file falied: %s\n", err)
+		log.Println("Write to form file falied: %s\n", err)
 		return
 	}
 
