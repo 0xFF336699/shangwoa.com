@@ -19,11 +19,13 @@ func createConsumePublish() {
 func testChannel() {
 	const(
 		//testChannelExchange = "amq.fanout"
-		//testChannelKind = "fanout"
-		testChannelExchange = "amq.direct"
-		testChannelKind = "direct"
-		testChannelQname = "test"
-		URL = "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album"
+		testChannelKind = "fanout"
+		//testChannelExchange = "amq.direct"
+		testChannelExchange = "order-paid"
+		//testChannelKind = "direct"
+		testChannelQname = "order-paid"
+		//URL = "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album"
+		URL = "amqp://snacks:oNQHPaSuCsblb6MX@rabbitmq.hb.ms.fanfanlo.com:8231/snacks-v"
 	)
 	args := &rabbitmq.ChannelArgs{
 		URL:URL,
