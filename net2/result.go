@@ -7,7 +7,7 @@ import (
 
 type ErrorInfo struct {
 	Msg string `json:"msg"`
-	Err error `json:"err"`
+	Err error `json:"_"`
 }
 type DataInfo struct {
 	Type string `json:"type"`
