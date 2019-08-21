@@ -3,12 +3,14 @@ package redis2
 import (
 	"fmt"
 	"github.com/go-redis/redis"
+	"strconv"
 )
 
-var clients = map[int]*redis.Client{}
+var clients = map[string]*redis.Client{}
 var Client *redis.Client
 func CreateClient(addr, pw string, db int) (err error, client *redis.Client)  {
-	if client, ok := clients[db]; ok{
+	name := addr + strconv.Itoa(db)
+	if client, ok := clients[name]; ok{
 		return nil, client
 	}
 	client = redis.NewClient(&redis.Options{
@@ -22,7 +24,7 @@ func CreateClient(addr, pw string, db int) (err error, client *redis.Client)  {
 		panic(s)
 	}
 	fmt.Println("redis pong", pong)
-	clients[db] = client
+	clients[name] = client
 	return err, client
 }
 func SetDefaultClient(addr, pw string, db int) (err error, client *redis.Client) {
@@ -43,13 +45,14 @@ func Create(opt *redis.Options)(err error, client *redis.Client)  {
 	return
 }
 func GetClient(opt *redis.Options) (err error, client *redis.Client) {
-	client, ok := clients[opt.DB]
+	name := opt.Addr + strconv.Itoa(opt.DB)
+	client, ok := clients[name]
 	if !ok{
 		err, client = Create(opt)
 		if err != nil{
 			return
 		}
-		clients[opt.DB] = client
+		clients[name] = client
 	}
 	return
 }
