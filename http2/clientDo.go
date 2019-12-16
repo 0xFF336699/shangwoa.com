@@ -1,9 +1,10 @@
 package http2
 
 import (
+	"fmt"
 	"io"
-	"net/http"
 	"io/ioutil"
+	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
@@ -11,13 +12,15 @@ import (
 )
 var UserAgent = `Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36`
 
-type FileDownload func(url, p string)(err error, path string, w, h int)
+type FileDownload func(url, p string)(err error, path string)
 func GetReq(url string) (r *http.Request, err error) {
 	r, err = http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", UserAgent)
+	r.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)")
+	//r.Header.Set("User-Agent", UserAgent)
+	//r.Header.Set("Referer", "http://www.mmonly.cc/tag/omyjhgf/")
 	return
 }
 var proxy func(req *http.Request)(url *url.URL, err error)
@@ -27,6 +30,7 @@ func init()  {
 		//proxyUrl, err := url.Parse("http://127.0.0.1:1080")
 		proxyUrl, err := url.Parse(proxyUrl)
 		if err != nil{
+			fmt.Println("cient do panic", proxyUrl)
 			panic(err)
 		}
 		proxy = http.ProxyURL(proxyUrl)
@@ -87,7 +91,7 @@ func ClientDo(r *http.Request, client *http.Client) (content []byte, err error) 
 	return
 }
 
-func FileDownloader(filename, url string, useProxy bool) (err error, file string, w, h int) {
+func FileDownloader(filename, url string, useProxy bool) (err error, file string) {
 	//filename = "c:\\x.jpg"
 	file = filename
 	err, res := GetBody(url, useProxy)
@@ -101,11 +105,14 @@ func FileDownloader(filename, url string, useProxy bool) (err error, file string
 		return
 	}
 	_, err = io.Copy(f, res.Body)
+	if err !=nil{
+		return
+	}
 	return
 }
 
 func NewFileDownloader(useproxy bool)(FileDownload)  {
-	return func(url, filename string)(err error, path string, w ,h int){
+	return func(url, filename string)(err error, path string){
 		return FileDownloader(filename, url, useproxy)
 	}
 }

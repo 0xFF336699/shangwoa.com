@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
 
@@ -144,7 +145,9 @@ var DefaultConnConf *ConnectionConf
 //}
 
 func GetConn(url string, retries *retry.Retries) (*amqp.Connection, error) {
+	fmt.Println("Get conn url is", url, retries.Retry.Count)
 	conn, err := getConn(url, retries)
+
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +164,22 @@ func getConn(url string, retries *retry.Retries) (*connection, error) {
 		m.m.Store(url, conn)
 		return conn, err
 	}
+	fmt.Println("use old connection url is", url)
 	return conn.(*connection), nil
 }
 
+func killConn(url string) (err error) {
+	conn, ok := m.m.Load(url)
+	if ok{
+		c := conn.(*connection)
+		if c != nil{
+			if c.conn != nil{
+				c.conn.Close()
+			}
+		}
+	}
+	return
+}
 func createconn(url string, retries *retry.Retries) (*connection, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
@@ -194,6 +210,7 @@ func GetChannel(url string, connRetries *retry.Retries, channelRetries *retry.Re
 	}
 	ch, err := conn.conn.Channel()
 	if err != nil {
+		fmt.Println("GetChannel conn.con.Channel error", err.Error())
 		conn, err = reconnectConn(url, connRetries)
 		if err != nil {
 			return nil, err

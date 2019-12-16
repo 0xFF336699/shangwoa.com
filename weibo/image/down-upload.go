@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"shangwoa.com/http2"
+	"shangwoa.com/os2"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type DownUploader struct {
 	tempPath string
 	loadingCookieRetryCount int
 	isLoadingCookies bool
-	GetCookies GetCookies
+	GetCookies GetCookies// 从shangwoa那边注入进来 file-down-upload.go
 	DownLoader http2.FileDownload
 	waitingUrls []*WaitingUrl
 	uploader *ImageUploader
@@ -91,37 +92,40 @@ func (this *DownUploader) checkWorkOk() {
 func (this *DownUploader)downUpload(w *WaitingUrl)  {
 	defer this.waitingUrlWorkDown(w)
 	fmt.Println("downupload start ", w.url)
-	err, u, width, height := this.DownLoader(w.url, w.filename)
+	err, u:= this.DownLoader(w.url, w.filename)
 	if err != nil{
 		fmt.Println("weibo downloader error", w.url, err.Error())
 		w.Err = err
-		w.Pid = u
+		//w.Pid = u
 		w.ch <- w
 		return
 	}
-	err, pid := this.uploader.Upload(u)
+
+	err, pid, width, height := this.uploader.Upload(u)
 	if err != nil{
 		fmt.Println("weibo upload error", w.url, err.Error())
 		this.cookieIsAvailable = false
 		go this.loadCookies()
 		w.Err = err
-		w.Pid = pid
+		//w.Pid = pid
 		w.ch <- w
 		return
 	}
 	w.Pid = pid
 	w.Width = width
 	w.Height = height
-	fmt.Println("downupload start complete", w.url)
+	fmt.Println("downupload complete", w.url)
 	w.ch <- w
 	return
 }
 
 func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
-	err := os.Remove(w.filename)
-	if err != nil{
-		println("remove file has error", w.filename, err.Error())
-	}
+	go func() {
+		err := removeFile(w.filename)
+		if err != nil{
+			fmt.Println("weibo image down-upload waiting url work down has error", err.Error())
+		}
+	}()
 	index := -1
 	for i, v := range this.waitingUrls{
 		if v == w{
@@ -132,4 +136,18 @@ func (this *DownUploader) waitingUrlWorkDown(w *WaitingUrl)  {
 	if index > -1{
 		this.waitingUrls = append(this.waitingUrls[:index], this.waitingUrls[index + 1:]...)
 	}
+}
+
+func removeFile(f string) (err error) {
+	err, isExists := os2.IsFile(f)
+	if err != nil {
+		return
+	}
+	if !isExists{
+		return os2.NotAFile
+	}
+	time.Sleep(1000)
+	err = os.Remove(f)
+	fmt.Println("down-upload removeFile", f, err)
+	return
 }

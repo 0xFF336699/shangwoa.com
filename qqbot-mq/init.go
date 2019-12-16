@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"shangwoa.com/os2"
+	"shangwoa.com/rabbitmq"
 )
 
 func init()  {
+	fmt.Println("begin init")
+	pcs = map[string]*rabbitmq.PubChannel{}
 	initFlags()
 	loadLocalConfig()
 	loadMqConf()
@@ -41,7 +44,7 @@ func loadLocalConfig() {
 	for _, h := range hosts{
 		CreateListener(h.Port, h.Path)
 	}
-	println(hosts)
+	fmt.Printf("hosts is %#v\n", hosts)
 }
 func loadMqConf() {
 	files, err := filepath.Glob(flagConfFolder + "/mq/*.json")
@@ -62,7 +65,7 @@ func loadMqConf() {
 		mqconfs = append(mqconfs, temps...)
 	}
 	for _, m := range mqconfs{
-		fmt.Println("%#v", m)
+		fmt.Println("load regist config %#v", m)
 		for _, b := range m.Bots{
 			b.Friend.ExcludeMap = map[int]*FriendExcluede{}
 			for _, f := range b.Friend.Excluede{

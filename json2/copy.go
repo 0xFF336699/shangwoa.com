@@ -3,7 +3,6 @@ package json2
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 )
 
 func Copy(in, out interface{}) error {
@@ -11,8 +10,6 @@ func Copy(in, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	str := string(b)
-	fmt.Println(str)
 	err = json.Unmarshal(b, out)
 	return err
 }

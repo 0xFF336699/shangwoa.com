@@ -1,22 +1,20 @@
-package rabbitmq
+package main
 
 import (
-	"github.com/streadway/amqp"
-	"testing"
 	"fmt"
+	"github.com/streadway/amqp"
+	"shangwoa.com/rabbitmq"
 	"time"
 )
-//go test -v publish_test.go publish.go rabbitmq.go
-func TestPublishByDefault(t *testing.T) {
-	//return
-	body := []byte("hehe")
-	err := PublishByDefault("test:1", "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album", body)
-	if err != nil{
-		fmt.Println(err)
-	}
+
+func main()  {
+	f:= make(chan int)
+	go tListen()
+	tPublishByConf()
+	<-f
 }
 
-func TestListen(t *testing.T) {
+func tListen() {
 	exec:= func(d *amqp.Delivery) error {
 		fmt.Println("listen msg is", string(d.Body))
 		return nil
@@ -26,19 +24,20 @@ func TestListen(t *testing.T) {
 		return false
 	}
 	url:= "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album"
-	qname := "test:2"
+	qname := "crawl_url:insert"
 	fmt.Println("qname is", qname)
-	qd := &QueueDeclare{Queue: qname, Durable: true, AutoDelete:false}
-	qb := &QueueBind{Queue: qname, RoutingKey: qname, Exchange: "amq.direct"}
-	qos := &Qos{PrefetchCount: 1, PrefetchSize: 0}
-	consume := &Consume{Queue: qname, ConsumerTag: ""}
-	Listen(exec, onError,url,qd, qb, qos, consume,time.Duration(60), 0, 20)
+	qd := &rabbitmq.QueueDeclare{Queue: qname, Durable: true, AutoDelete:false}
+	qb := &rabbitmq.QueueBind{Queue: qname, RoutingKey: qname, Exchange: "amq.direct"}
+	qos := &rabbitmq.Qos{PrefetchCount: 1, PrefetchSize: 0}
+	consume := &rabbitmq.Consume{Queue: qname, ConsumerTag: ""}
+	rabbitmq.Listen(exec, onError,url,qd, qb, qos, consume,time.Duration(60), 0, 20)
 }
 
-func TestPublishByConf(t *testing.T) {
+func tPublishByConf() {
+	return
 	body := []byte("hehe")
 	url := "amqp://album:album@rabbitmq.hb.ms.shangwoa.com:8231/album"
-	qname := "test:2"
+	qname := "crawl_url:insert"
 	routingKey := qname
 	exchange := "amq.direct"
 	kind := "direct"
@@ -56,5 +55,6 @@ func TestPublishByConf(t *testing.T) {
 		)
 	}
 	publish := func(ch *amqp.Channel, p *amqp.Publishing)(err error) {return  ch.Publish(exchange, routingKey, false, false, *p)}
-	Publish2(url, &p, declare, publish)
+	err := rabbitmq.Publish2(url, &p, declare, publish)
+	fmt.Println("publish error is", err)
 }

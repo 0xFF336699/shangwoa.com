@@ -106,3 +106,32 @@ func Publish(qName, exchange, key, kind, url string, body []byte) error {
 	}
 	return nil
 }
+
+func Publish2(url string, p *amqp.Publishing, exchangeDeclare func(ch *amqp.Channel)(error), publish func(ch *amqp.Channel, p *amqp.Publishing)(error))(err error)  {
+	ch, err := GetChannelByDefaultRetries(url)
+	if err != nil {
+		return
+	}
+	err = exchangeDeclare(ch)
+	if err != nil{
+		return
+	}
+	err = publish(ch, p)
+	if err != nil{
+		return
+	}
+	return
+}
+
+
+func Publish3(ch *amqp.Channel, p *amqp.Publishing, exchangeDeclare func(ch *amqp.Channel)(error), publish func(ch *amqp.Channel, p *amqp.Publishing)(error))(err error)  {
+	err = exchangeDeclare(ch)
+	if err != nil{
+		return
+	}
+	err = publish(ch, p)
+	if err != nil{
+		return
+	}
+	return
+}

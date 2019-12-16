@@ -6,6 +6,11 @@ import (
 	mrand "math/rand"
 	"time"
 )
+func Random(min int, max int) (num int)  {
+	mrand.Seed(int64(time.Now().UnixNano()))
+	num = mrand.Intn(max - min) + min
+	return
+}
 func Rand(min int, max int) (num int, err error)  {
 	var seed int64
 	err = binary.Read(crand.Reader, binary.BigEndian, &seed)

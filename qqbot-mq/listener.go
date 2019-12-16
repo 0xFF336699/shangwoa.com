@@ -20,6 +20,7 @@ type Listener struct{
 }
 var listeners = make(map[string]*Listener)
 func CreateListener(port int, path string) (*Listener) {
+	fmt.Println("create listener", port, path);
 	url := strconv.Itoa(port) + path
 	if l, ok := listeners[url]; ok{
 		return l
@@ -31,7 +32,7 @@ func CreateListener(port int, path string) (*Listener) {
 		defer request.Body.Close()
 		writer.WriteHeader(204)
 		buffer, _ := ioutil.ReadAll(request.Body)
-		//println("buffer is", string(buffer))
+		println("buffer is", string(buffer))
 		m := map[string]interface{}{}
 
 		if err := json.Unmarshal(buffer, &m);err != nil{
@@ -65,10 +66,10 @@ func CreateListener(port int, path string) (*Listener) {
 					break
 				}
 				if _, ok := bot.Group.SpecialMap[groupID]; ok{
-					fmt.Println("it's sticker", string(buffer))
+					//fmt.Println("it's sticker", string(buffer))
 					qname += c + strconv.Itoa(groupID)
 				}else{
-					fmt.Println("it's normal", string(buffer))
+					//fmt.Println("it's normal", string(buffer))
 				}
 				break
 			case MessageTypeDiscuss:
@@ -128,16 +129,59 @@ func CreateListener(port int, path string) (*Listener) {
 	}()
 	return l
 }
+var pcs map[string]*rabbitmq.PubChannel
+func getChannel(url, qname string) (err error, pc *rabbitmq.PubChannel){
+	name := url+"_" + qname
+	if pc, ok := pcs[name]; ok{
+		return nil, pc
+	}
+	args := &rabbitmq.ChannelArgs{
+		URL:url,
+		Exchange:"amq.direct",
+		Qname:"",
+		Kind:"direct",
+		RoutingKey:qname,
+		Durable:true,
+		Mandatory:false,
+		Immediate:false,
+		AutoDelete:false,
+		Internal:false,
+		Exclusive:false,
+		NoWait:false,
+		RetryMaxCount:10,
+		InteralTime:1000,
+		Args:nil,
+		DeliveryMode:2,
+		ContentType:"text/plain",
+		MaxWaitingCount:10,
+	}
+	err, pc = rabbitmq.MaxWaitingPublishChannel(args)
+	if err!= nil{
+		return
+	}
+	pcs[name] = pc
+	return
+}
 func SendMsg(mq, qname string, body []byte) {
 	sendMsg(mq, qname, body)
 }
 func sendMsg(mq string, qname string, body []byte)  {
-
-	//fmt.Println("qname is", qname, mq)
-	//err := rabbitmq.PublishByDefault("post_media_order:downloaded", "amqp://ig-crawler:ig-crawler@rabbitmq.hb.ms.shangwoa.com:8231/ig-crawler", body)
-	//err := rabbitmq.PublishByDefault(qname, mq, body)
-	err := rabbitmq.Publish(qname, "amq.direct", qname, "direct", mq, body)
-	if err != nil {
-		fmt.Println("publish error", err.Error())
+	err, pc := getChannel(mq, qname)
+	if err != nil{
+		fmt.Println("publish apply channel error", err.Error(), string(body))
+		return
 	}
+	fmt.Println("befor publish")
+	err = pc.Publish(body)
+	fmt.Println("afeter publish")
+	if err != nil{
+		fmt.Println("publish error", err.Error(), string(body))
+		cancelPc(mq, qname)// 没有做后续处理
+	}else{
+		fmt.Println("2019-04-19 publish ok", string(body))
+	}
+}
+
+func cancelPc(mq, qname string)  {
+	delete(pcs, mq + "_" + qname)
 }
