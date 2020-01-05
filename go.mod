@@ -15,3 +15,5 @@ require (
 	golang.org/x/text v0.3.2
 	qiniupkg.com/x v7.0.8+incompatible
 )
+
+go 1.13
