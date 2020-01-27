@@ -7,7 +7,13 @@ import (
 )
 const asterisk = "*"
 const sharp = ":"
-const urlCharacters = `[-A-Za-z0-9+&@#%=~_|!:,.;]+`
+//const urlCharacters = `[-A-Za-z0-9+&@#%=~_|!:,.;]+`
+const urlCharacters = `.*`
+//const urlCharactersEnd = `[-A-Za-z0-9+&@#%=~_|!:,.;]+$`
+const urlCharactersEnd = `.*$`
+const urlCharactersAll = `[-A-Za-z0-9+&@#/%=~_|!:,.;]+`
+//const urlCharactersAllEnd = `[-A-Za-z0-9+&@#/%=~_|!:,.;]*`
+const urlCharactersAllEnd = `.*$`
 type match func(r *http.Request, daata *RouterData)bool
 type handler func(w http.ResponseWriter, r *http.Request, next func(bool),  data *RouterData)
 // 如果某个步骤解析了部分数据可以放进来，设计思路为高内聚场景，路由之间基本已知互相的存在，这样可以节省计算
@@ -18,9 +24,9 @@ type matchNode struct{
 }
 
 type pathMatch struct{
-	Nodes []*matchNode
+	Nodes     []*matchNode
 	RegString string
-	Reg *regexp.Regexp
+	Reg       *regexp.Regexp
 }
 
 type RouterData struct{
@@ -75,7 +81,7 @@ func NewApp() (app *App) {
 }
 
 func (app *App)Handler(w http.ResponseWriter, r *http.Request)  {
-	go runRouters(app, w, r)
+	runRouters(app, w, r)
 }
 
 func (app *App) AddRouter(router *Route) {
@@ -88,6 +94,9 @@ func (app *App) AddRouter(router *Route) {
 }
 
 func (app *App) Get(pattern string, handler handler) {
+	app.AddRouter(createRouter(pattern, handler, []string{http.MethodGet}))
+}
+func createRouter(pattern string, handler handler, types []string) (router *Route) {
 	ps := strings.Split(pattern, "/")
 	pm := &pathMatch{
 		Nodes:     []*matchNode{},
@@ -100,7 +109,11 @@ func (app *App) Get(pattern string, handler handler) {
 		}
 		pm.RegString += "/"
 		if strings.Index(p, asterisk) > -1{
-			p = "(" + strings.Replace(p, asterisk, urlCharacters, -1) + ")"
+			if i == len(ps) - 1{
+				p = "(" + strings.Replace(p, asterisk, urlCharactersAllEnd, -1) + ")"
+			}else{
+				p = "(" + strings.Replace(p, asterisk, urlCharacters, -1) + ")"
+			}
 			pm.Nodes = append(pm.Nodes, &matchNode{
 				Type:  asterisk,
 				Index: i,
@@ -113,13 +126,21 @@ func (app *App) Get(pattern string, handler handler) {
 				Index: i,
 				Key:   key,
 			})
-			p = "(" + urlCharacters + ")"
+			if i == len(ps) - 1{
+				p = "(" + urlCharactersEnd + ")"
+			}else{
+				p = "(" + urlCharacters + ")"
+			}
+		}else{
+			if i == len(ps) - 1{
+				p += "$"
+			}
 		}
 		pm.RegString += p
 	}
 	pm.Reg = regexp.MustCompile(pm.RegString)
-	router := &Route{
-		Types:     []string{http.MethodGet},
+	router = &Route{
+		Types:     types,
 		Path:      "",
 		Match:     nil,
 		pathMatch: nil,
@@ -130,13 +151,12 @@ func (app *App) Get(pattern string, handler handler) {
 	}else{
 		router.Path = pattern
 	}
-	app.AddRouter(router)
+	return
 }
-
 func matchPath(p string, pm *pathMatch, data *RouterData) (bl bool)  {
 	bl, _ = regexp.MatchString(pm.RegString, p)
 	ps := pm.Reg.FindStringSubmatch(p)
-	if len(ps) - 1 != len(pm.Nodes){
+	if len(ps) - 1 != len(pm.Nodes) {
 		return false
 	}
 	for i := 0; i < len(pm.Nodes); i++{
