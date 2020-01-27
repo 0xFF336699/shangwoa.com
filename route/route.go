@@ -75,7 +75,7 @@ func NewApp() (app *App) {
 }
 
 func (app *App)Handler(w http.ResponseWriter, r *http.Request)  {
-	runRouters(app, w, r)
+	go runRouters(app, w, r)
 }
 
 func (app *App) AddRouter(router *Route) {
