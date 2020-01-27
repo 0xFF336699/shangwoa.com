@@ -68,12 +68,11 @@ type Route struct{
 }
 
 type App struct{
-	routers []*Route
 	trees map[string][]*Route
 }
 
 func NewApp() (app *App) {
-	return &App{routers: []*Route{}, trees: map[string][]*Route{}}
+	return &App{ trees: map[string][]*Route{}}
 }
 
 func (app *App)Handler(w http.ResponseWriter, r *http.Request)  {
@@ -87,7 +86,6 @@ func (app *App) AddRouter(router *Route) {
 	for _, v := range router.Types{
 		app.trees[v] = append(app.trees[v], router)
 	}
-	app.routers = append(app.routers, router)
 }
 
 func (app *App) Get(pattern string, handler handler) {
@@ -166,10 +164,10 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 	routers := app.trees[r.Method]
 	var next func(bool)
 	next = func(end bool) {
-		if end || index >= len(app.routers){
+		router := routers[index]
+		if end || index >= len(routers){
 			return
 		}
-		router := routers[index]
 		index ++
 		if ((router.Path != "" && router.Path == data.Path) ||
 				(router.Match != nil && router.Match(r, data)) ||
