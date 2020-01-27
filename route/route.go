@@ -1,20 +1,23 @@
 package route
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"regexp"
 	"strings"
+	"time"
 )
 const asterisk = "*"
 const sharp = ":"
-//const urlCharacters = `[-A-Za-z0-9+&@#%=~_|!:,.;]+`
 const urlCharacters = `.*`
-//const urlCharactersEnd = `[-A-Za-z0-9+&@#%=~_|!:,.;]+$`
 const urlCharactersEnd = `.*$`
 const urlCharactersAll = `[-A-Za-z0-9+&@#/%=~_|!:,.;]+`
-//const urlCharactersAllEnd = `[-A-Za-z0-9+&@#/%=~_|!:,.;]*`
 const urlCharactersAllEnd = `.*$`
 type match func(r *http.Request, daata *RouterData)bool
+// @next 建议每次经过路由，在末尾都调用next，并明确指示是否要结束，这样可以方便查看一个请求处理的耗时
 type handler func(w http.ResponseWriter, r *http.Request, next func(bool),  data *RouterData)
 // 如果某个步骤解析了部分数据可以放进来，设计思路为高内聚场景，路由之间基本已知互相的存在，这样可以节省计算
 type matchNode struct{
@@ -38,6 +41,11 @@ type RouterData struct{
 	Body map[string]interface{}
 	Queries    map[string]interface{}
 	Extra      interface{} // 可传递next路由使用上一个路由产生的数据
+	// 静态文件处理，runRouters方法里 如果请求是get方法，两个条件匹配后会在静态文件里查找
+	//  handled==false，没有路由处理会进入静态文件查找
+	// handled==true &&  IsStatic == true，有路由处理过，例如cookie和或者urlrewrite，但是没有输出，也会进行静态文件查找
+	IsStatic bool
+	Preffix  string
 }
 
 func (d *RouterData) MustGetValue(key string)(value interface{})  {
@@ -92,7 +100,11 @@ func (app *App) AddRouter(router *Route) {
 		app.trees[v] = append(app.trees[v], router)
 	}
 }
-
+// @pattern /* 匹配 /任意后续路径和文件名，如 /a /a/ /a/b /a/b/c.html
+// @pattern /a/* 匹配 /a/任意后续路径和文件名，如 /a/b /a/b/c.html
+// 上面就是说 最后一个字符如果是星号，就匹配后面所有剩余部分，无论多少层路径和以及文件名
+// @pattern /a/*/f 匹配 /a/任意字符/f
+// @pattern /:name/*/:id 匹配 /任意字符被命名为name/任意字符/任意字符被命名为id
 func (app *App) Get(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodGet}))
 }
@@ -174,6 +186,7 @@ func matchPath(p string, pm *pathMatch, data *RouterData) (bl bool)  {
 }
 
 func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now().Unix()
 	handled := false
 	index := 0
 	data := &RouterData{
@@ -184,6 +197,7 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 	var next func(bool)
 	next = func(end bool) {
 		if end || index >= len(routers){
+			fmt.Println("本次请求处理总耗时", r.RequestURI, data.Path, time.Now().Unix() - startTime)
 			return
 		}
 		router := routers[index]
@@ -199,8 +213,66 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	next(false)
+	if r.Method == http.MethodGet && ((handled && data.IsStatic) || (!handled && data.IsStatic == false)){
+		hasFile, bs := GetFile(data.Preffix, data.Path)
+		if hasFile{
+			handled = true
+			w.Write(bs)
+		}
+
+	}
 	if !handled{
 		w.WriteHeader(404)
+		return
+	}
+	if data.IsStatic{
+
+	}
+	return
+}
+
+
+
+type StaticDirectory struct {
+	Directory string // 物理目录
+	Path string // 映射路径前缀
+}
+var staticDirectories []*StaticDirectory
+var staticFiles = map[string][]byte{}
+var fileHandlers = map[string]func([]byte)[]byte{}
+func InitStaticDirectories(directories []*StaticDirectory)  {
+	staticDirectories = directories
+}
+
+func AddFileHandler(p string, handler func([]byte) []byte) {
+	fileHandlers[p] = handler
+}
+func GetFile(p, f string) (hasFile bool, bs []byte) {
+	var err error
+	bs, hasFile = staticFiles[path.Join(p, f)]
+	if hasFile{
+		return
+	}
+	for i := 0; i < len(staticDirectories); i ++{
+		if staticDirectories[i].Path != p{
+			continue
+		}
+		d := path.Join(staticDirectories[i].Directory, f)
+		if _, err = os.Stat(d); os.IsNotExist(err) {
+			fmt.Println("find file has error", p, f, err.Error())
+			return
+		}
+		bs, err = ioutil.ReadFile(d)
+		if err != nil {
+			fmt.Println("read file has error", p, f, err.Error())
+			return
+		}
+		if f, ok := fileHandlers[path.Join(p, f)]; ok{
+			bs = f(bs)
+		}
+		staticFiles[path.Join(p, f)] = bs
+		hasFile = true
+		return
 	}
 	return
 }
