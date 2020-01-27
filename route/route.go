@@ -9,7 +9,6 @@ const asterisk = "*"
 const sharp = ":"
 const urlCharacters = `[-A-Za-z0-9+&@#%=~_|!:,.;]+`
 type match func(r *http.Request, daata *RouterData)bool
-type parseParams func(r http.Request) interface{}
 type handler func(w http.ResponseWriter, r *http.Request, next func(bool),  data *RouterData)
 // 如果某个步骤解析了部分数据可以放进来，设计思路为高内聚场景，路由之间基本已知互相的存在，这样可以节省计算
 type matchNode struct{
@@ -164,16 +163,16 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 	routers := app.trees[r.Method]
 	var next func(bool)
 	next = func(end bool) {
-		router := routers[index]
 		if end || index >= len(routers){
 			return
 		}
+		router := routers[index]
 		index ++
 		if ((router.Path != "" && router.Path == data.Path) ||
 				(router.Match != nil && router.Match(r, data)) ||
 				(router.pathMatch != nil && matchPath(data.Path, router.pathMatch, data))) {
 			handled = true
-			router.Handler(w, r, next, data)
+ 			router.Handler(w, r, next, data)
 		}else{
 			next(false)
 		}
