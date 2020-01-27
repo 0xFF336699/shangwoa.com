@@ -3,9 +3,11 @@ package route
 import (
 	"fmt"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -213,11 +215,13 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	next(false)
+
 	if r.Method == http.MethodGet && ((handled && data.IsStatic) || (!handled && data.IsStatic == false)){
-		hasFile, bs := GetFile(data.Preffix, data.Path)
-		if hasFile{
+		cf := GetFile(data.Preffix, data.Path)
+		if cf != nil{
 			handled = true
-			w.Write(bs)
+			w.Header().Set("Content-Type", cf.ctype)
+			w.Write(cf.bs)
 		}
 
 	}
@@ -225,31 +229,32 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	if data.IsStatic{
-
-	}
 	return
 }
-
-
 
 type StaticDirectory struct {
 	Directory string // 物理目录
 	Path string // 映射路径前缀
 }
+type CachedFile struct{
+	bs []byte
+	ctype string
+}
 var staticDirectories []*StaticDirectory
-var staticFiles = map[string][]byte{}
+var cachedFiles = map[string]*CachedFile{}
 var fileHandlers = map[string]func([]byte)[]byte{}
-func InitStaticDirectories(directories []*StaticDirectory)  {
+
+func SetStaticDirectories(directories []*StaticDirectory)  {
 	staticDirectories = directories
 }
 
 func AddFileHandler(p string, handler func([]byte) []byte) {
 	fileHandlers[p] = handler
 }
-func GetFile(p, f string) (hasFile bool, bs []byte) {
+
+func GetFile(p, f string) (cf *CachedFile) {
 	var err error
-	bs, hasFile = staticFiles[path.Join(p, f)]
+	cf, hasFile := cachedFiles[path.Join(p, f)]
 	if hasFile{
 		return
 	}
@@ -262,7 +267,7 @@ func GetFile(p, f string) (hasFile bool, bs []byte) {
 			fmt.Println("find file has error", p, f, err.Error())
 			return
 		}
-		bs, err = ioutil.ReadFile(d)
+		bs, err := ioutil.ReadFile(d)
 		if err != nil {
 			fmt.Println("read file has error", p, f, err.Error())
 			return
@@ -270,8 +275,13 @@ func GetFile(p, f string) (hasFile bool, bs []byte) {
 		if f, ok := fileHandlers[path.Join(p, f)]; ok{
 			bs = f(bs)
 		}
-		staticFiles[path.Join(p, f)] = bs
-		hasFile = true
+
+		ctype := mime.TypeByExtension(filepath.Ext(d))
+		cf = &CachedFile{
+			bs:    bs,
+			ctype: ctype,
+		}
+		cachedFiles[path.Join(p, f)] = cf
 		return
 	}
 	return
