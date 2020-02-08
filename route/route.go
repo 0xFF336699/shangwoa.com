@@ -102,6 +102,8 @@ func (app *App) AddRouter(router *Route) {
 		app.trees[v] = append(app.trees[v], router)
 	}
 }
+// 如果需要输出header的话，就需要把排序放在前面，注意 next(true)，这里的true是isEnd，是不再继续向下匹配的意思
+// 多次匹配路由后，如果多次出现*星号匹配，则会累积，例如/* /b/* /*/b/* 在/*/b/*路由的时候data.PathNodes会有4个内容，所以 如果需要正确匹配就得用命名的方式:id :name这样
 // @pattern /* 匹配 /任意后续路径和文件名，如 /a /a/ /a/b /a/b/c.html
 // @pattern /a/* 匹配 /a/任意后续路径和文件名，如 /a/b /a/b/c.html
 // 上面就是说 最后一个字符如果是星号，就匹配后面所有剩余部分，无论多少层路径和以及文件名
