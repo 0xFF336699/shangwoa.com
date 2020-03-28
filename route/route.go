@@ -99,6 +99,16 @@ func (d *RouterData) GetValue(key string) (value interface{}, bl bool)  {
 			return
 		}
 	}
+	values := d.R.URL.Query()
+	v := values[key]
+	if len(v) > 0{
+		value = v[0]
+		if d.Queries == nil{
+			d.Queries = map[string]interface{}{}
+		}
+		d.Queries[key] = value
+		bl = true
+	}
 	return
 }
 
