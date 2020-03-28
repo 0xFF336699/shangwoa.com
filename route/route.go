@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -55,6 +56,33 @@ func (d *RouterData) MustGetValue(key string)(value interface{})  {
 	return
 }
 
+func (d *RouterData) MustGetStringValue(key string) string {
+	v, b := d.GetValue(key)
+	if !b{
+		return ""
+	}
+	return v.(string)
+}
+
+func (d *RouterData) MustGetBoolValue(key string) bool {
+	v, b := d.GetValue(key)
+	if !b {
+		return false
+	}
+	return v == "true" || v == "1"
+}
+
+func (d *RouterData) MustGetIntValue(key string) int {
+	v, b := d.GetValue(key)
+	if !b{
+		return 0
+	}
+	n, e := strconv.Atoi(v.(string))
+	if e != nil{
+		return 0
+	}
+	return n
+}
 func (d *RouterData) GetValue(key string) (value interface{}, bl bool)  {
 	if d.PathParams != nil {
 		if value, bl = d.PathParams[key]; bl{
