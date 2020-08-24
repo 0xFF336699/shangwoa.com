@@ -49,6 +49,9 @@ type RouterData struct{
 	// handled==true &&  IsStatic == true，有路由处理过，例如cookie和或者urlrewrite，但是没有输出，也会进行静态文件查找
 	IsStatic bool
 	Preffix  string
+	NoCache bool
+	IsFile bool
+	ContentType string
 }
 
 func (d *RouterData) MustGetValue(key string)(value interface{})  {
@@ -257,11 +260,29 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 	next(false)
 
 	if r.Method == http.MethodGet && ((handled && data.IsStatic) || (!handled && data.IsStatic == false)){
-		cf := GetFile(data.Preffix, data.Path)
+		cf := GetFile(data.Preffix, data.Path, !data.NoCache)
 		if cf != nil{
 			handled = true
-			w.Header().Set("Content-Type", cf.ctype)
-			w.Write(cf.bs)
+			if data.ContentType != ""{
+				w.Header().Set("Content-Type", data.ContentType)
+			}else if cf.ctype != ""{
+				w.Header().Set("Content-Type", cf.ctype)
+			}
+			w.Header().Set("Content-Length", strconv.Itoa(len(cf.bs)))
+			w.Header().Set("X-Upyun-Content-Length", strconv.Itoa(len(cf.bs)))
+			writen := false
+			if data.IsFile{
+				//http.ServeFile(w, r, )
+				fp := getFilePath(data.Preffix, data.Path)
+				if fp != ""{
+					http.ServeFile(w, r, fp)
+					writen = true
+				}
+			}
+			if !writen{
+				w.Write(cf.bs)
+			}
+			fmt.Println("write content")
 		}
 
 	}
@@ -292,11 +313,38 @@ func AddFileHandler(p string, handler func([]byte) []byte) {
 	fileHandlers[p] = handler
 }
 
-func GetFile(p, f string) (cf *CachedFile) {
+func getFilePath(p, f string)( s string)  {
+
+	for i := 0; i < len(staticDirectories); i ++ {
+		if staticDirectories[i].Path != p {
+			continue
+		}
+		d := path.Join(staticDirectories[i].Directory, f)
+		if fileExist(d){
+			return  d
+		}
+
+	}
+	return
+}
+
+func fileExist(path string) bool {
+	_, err := os.Stat(path)    //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
+}
+func GetFile(p, f string, cache bool) (cf *CachedFile) {
 	var err error
-	cf, hasFile := cachedFiles[path.Join(p, f)]
-	if hasFile{
-		return
+	if cache{
+		cf, hasFile := cachedFiles[path.Join(p, f)]
+		if hasFile{
+			return cf
+		}
 	}
 	for i := 0; i < len(staticDirectories); i ++{
 		if staticDirectories[i].Path != p{
@@ -321,7 +369,9 @@ func GetFile(p, f string) (cf *CachedFile) {
 			bs:    bs,
 			ctype: ctype,
 		}
-		cachedFiles[path.Join(p, f)] = cf
+		if cache{
+			cachedFiles[path.Join(p, f)] = cf
+		}
 		return
 	}
 	return

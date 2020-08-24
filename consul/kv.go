@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
 
-	"qiniupkg.com/x/errors.v7"
 	"shangwoa.com/http2"
 	"shangwoa.com/json2"
 	"shangwoa.com/log2"
