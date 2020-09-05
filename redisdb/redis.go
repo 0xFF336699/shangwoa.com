@@ -63,7 +63,7 @@ func createRedisClient(opt *redis.Options) (err error, client *redis.Client) {
 		if client != nil {
 			_, err = client.Ping().Result()
 			if err == nil{
-				fmt.Println(fmt.Printf("redis connected %+v", opt))
+				fmt.Println(fmt.Printf("redis connected"))
 				return nil, client
 			}
 		}
