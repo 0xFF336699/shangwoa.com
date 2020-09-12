@@ -153,6 +153,9 @@ func (app *App) AddRouter(router *Route) {
 func (app *App) Get(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodGet}))
 }
+func (app *App) OPTIONS(pattern string, handler handler) {
+	app.AddRouter(createRouter(pattern, handler, []string{http.MethodOptions}))
+}
 func createRouter(pattern string, handler handler, types []string) (router *Route) {
 	ps := strings.Split(pattern, "/")
 	pm := &pathMatch{
