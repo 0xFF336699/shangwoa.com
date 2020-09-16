@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 const asterisk = "*"
@@ -241,9 +242,13 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 		R: r,
 		Path:r.URL.Path,
 	}
+	complete := false
 	routers := app.trees[r.Method]
 	var next func(bool)
 	next = func(end bool) {
+		if end{
+			complete = true
+		}
 		if end || index >= len(routers){
 			fmt.Println("本次请求处理总耗时", r.RequestURI, data.Path, time.Now().Unix() - startTime)
 			return
@@ -262,7 +267,7 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 	}
 	next(false)
 
-	if r.Method == http.MethodGet && ((handled && data.IsStatic) || (!handled && data.IsStatic == false)){
+	if r.Method == http.MethodGet && (!complete || (handled && data.IsStatic) || (!handled && data.IsStatic == false)){
 		cf := GetFile(data.Preffix, data.Path, !data.NoCache)
 		if cf != nil{
 			handled = true
@@ -305,8 +310,42 @@ type CachedFile struct{
 	ctype string
 }
 var staticDirectories []*StaticDirectory
-var cachedFiles = map[string]*CachedFile{}
+var cachedFiles = &_StringICachedFileSyncMap{
+}
 var fileHandlers = map[string]func([]byte)[]byte{}
+
+type _StringICachedFileSyncMap struct {
+	Map sync.Map
+}
+
+func (this *_StringICachedFileSyncMap) Load(key string)(v *CachedFile, ok bool)  {
+	i, ok := this.Map.Load(key)
+	if !ok{
+		return
+	}
+	v = i.(*CachedFile)
+	return
+}
+
+func (this *_StringICachedFileSyncMap) LoadOrStore(key string, value *CachedFile)(v *CachedFile, ok bool)  {
+	i, ok := this.Map.LoadOrStore(key, value)
+	if !ok{
+		return
+	}
+	v = i.(*CachedFile)
+	return
+}
+
+func (this *_StringICachedFileSyncMap) Range(f func(key string, value *CachedFile) bool )  {
+	this.Map.Range(func(key, value interface{}) bool {
+		k := key.(string)
+		v := value.(*CachedFile)
+		return f(k, v)
+	})
+	return
+}
+
+
 
 func SetStaticDirectories(directories []*StaticDirectory)  {
 	staticDirectories = directories
@@ -344,7 +383,7 @@ func fileExist(path string) bool {
 func GetFile(p, f string, cache bool) (cf *CachedFile) {
 	var err error
 	if cache{
-		cf, hasFile := cachedFiles[path.Join(p, f)]
+		cf, hasFile := cachedFiles.Load(path.Join(p, f))
 		if hasFile{
 			return cf
 		}
@@ -354,14 +393,15 @@ func GetFile(p, f string, cache bool) (cf *CachedFile) {
 			continue
 		}
 		d := path.Join(staticDirectories[i].Directory, f)
+		d = strings.ReplaceAll(d, "/", string(os.PathSeparator))
 		if _, err = os.Stat(d); os.IsNotExist(err) {
 			fmt.Println("find file has error", p, f, err.Error())
-			return
+			continue
 		}
 		bs, err := ioutil.ReadFile(d)
 		if err != nil {
 			fmt.Println("read file has error", p, f, err.Error())
-			return
+			continue
 		}
 		if f, ok := fileHandlers[path.Join(p, f)]; ok{
 			bs = f(bs)
@@ -373,7 +413,7 @@ func GetFile(p, f string, cache bool) (cf *CachedFile) {
 			ctype: ctype,
 		}
 		if cache{
-			cachedFiles[path.Join(p, f)] = cf
+			cachedFiles.Map.Store(path.Join(p, f), cf)
 		}
 		return
 	}
