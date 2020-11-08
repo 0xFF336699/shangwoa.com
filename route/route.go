@@ -129,9 +129,18 @@ type App struct{
 }
 
 func NewApp() (app *App) {
-	return &App{ trees: map[string][]*Route{}}
+	app = &App{ trees: map[string][]*Route{}}
+	app.Get("/update-website-conf", handleUpdateWebsiteConf)
+	return app
 }
 
+func handleUpdateWebsiteConf(w http.ResponseWriter, r *http.Request, next func(bool), data *RouterData) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(200)
+	UpdateWebsiteConf()
+	next(true)
+}
 func (app *App)Handler(w http.ResponseWriter, r *http.Request)  {
 	runRouters(app, w, r)
 }
@@ -266,7 +275,14 @@ func runRouters(app *App, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	next(false)
-
+	//尚不清楚method是否需要匹配多个
+	if r.Method == http.MethodGet && (!complete) {
+		_, handled = ServeFileIfExist(w, r, data.Path)
+		if handled{
+			return
+		}
+	}
+	// 下面的if判断希望不再被使用，由上面的判断代替
 	if r.Method == http.MethodGet && (!complete || (handled && data.IsStatic) || (!handled && data.IsStatic == false)){
 		cf := GetFile(data.Preffix, data.Path, !data.NoCache)
 		if cf != nil{
