@@ -42,6 +42,30 @@ type KVValue struct {
 	Extra string `json:"extra"`
 }
 
+type  KVInt struct{
+	Name string `json:"name"`
+	Explanation string `json:"explanation"`
+	Value int `json:"value"`
+}
+
+type  KVFloat64 struct{
+	Name string `json:"name"`
+	Explanation string `json:"explanation"`
+	Value float64 `json:"value"`
+}
+
+type  KVBool struct{
+	Name string `json:"name"`
+	Explanation string `json:"explanation"`
+	Value bool `json:"value"`
+}
+
+type  KVString struct{
+	Name string `json:"name"`
+	Explanation string `json:"explanation"`
+	Value string `json:"value"`
+}
+
 type KVRedis struct {
 	Addr string `json:"addr"`
 	PW   string `json:"pw"`
@@ -65,6 +89,10 @@ type KV struct {
 	KVJSONB *json2.JSONB
 	// KVStringValue 如果以上KVValue、KVStruct、KVJSONB都不赋值的话，第四则默认使用这个
 	KVStringValue string
+	KVInt *KVInt
+	KVFloat64 *KVFloat64
+	KVBool *KVBool
+	KVString *KVString
 }
 
 type TxnResult struct {
@@ -153,7 +181,7 @@ func GetKeys(url string, m map[string]*KV) error {
 	return nil
 }
 
-func parseValue(res *KVRes, kv *KV) (err error) {
+func parseValue2(res *KVRes, kv *KV) (err error) {
 	decodeBytes, err := base64.StdEncoding.DecodeString(res.Value)
 	if err != nil {
 		kv.Err = &err
@@ -196,7 +224,71 @@ func parseValue(res *KVRes, kv *KV) (err error) {
 			kv.Err = &err
 			return
 		}
-	} else {
+	}else if kv.KVInt != nil{
+		err = json.Unmarshal(decodeBytes, kv.KVInt)
+		if err != nil {
+			kv.Err = &err
+			return
+		}
+	}else {
+		kv.KVStringValue = string(decodeBytes)
+	}
+	return nil
+}
+
+
+func parseValue(res *KVRes, kv *KV) (err error) {
+	decodeBytes, err := base64.StdEncoding.DecodeString(res.Value)
+	if err != nil {
+		kv.Err = &err
+		return
+	}
+	var i interface{}
+	if kv.KVStruct != nil{
+		i = kv.KVStruct
+	}else if kv.KVJSONB != nil {
+		i = kv.KVJSONB
+	}else if kv.KVValue != nil{
+		i = kv.KVValue
+	}else if kv.KVInt != nil{
+		i = kv.KVInt
+	}else if kv.KVFloat64 != nil{
+		i = kv.KVFloat64
+	}else if kv.KVBool != nil{
+		i = kv.KVBool
+	}else if kv.KVString != nil{
+		i = kv.KVString
+	}
+
+	if i != nil{
+		err = json.Unmarshal(decodeBytes, i)
+		if err != nil {
+			kv.Err = &err
+			return
+		}
+		if kv.KVValue == nil{
+			return
+		}
+		v := kv.KVValue
+		switch v.Value.(type) {
+		case int:
+			v.Int = v.Value.(int)
+			v.ValueKind = reflect.Int
+		case float64:
+			v.Float64 = v.Value.(float64)
+			v.ValueKind = reflect.Float64
+		case string:
+			v.String = v.Value.(string)
+			v.ValueKind = reflect.String
+		case bool:
+			v.Bool = v.Value.(bool)
+			v.ValueKind = reflect.Bool
+		default:
+			err = errors.New("unknow type")
+			kv.Err = &err
+			return
+		}
+	}else{
 		kv.KVStringValue = string(decodeBytes)
 	}
 	return nil
