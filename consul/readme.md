@@ -1,10 +1,22 @@
 一般使用方法  
 本地有个local.conf.json的文件  
 ```
+// json文件
+{
+  "consul":{
+    "acl":"ig",
+    "token":"xxx-xxxx-xxxxx-xxxx",
+    "host":"http://consul.ms.xxxxx.com/",
+    "txn":"v1/txn"
+  },
+  "consul_keys": {
+    "ConsulKeyPathName": "express-dev/pg/main/main",
+  }
+}
 // 这里储存了所有consul里的key路径
 type ConsulKeys struct{
 // consul里面kv的k路径
-	ConsulKeyPath                       string `json:"consul_key_path"`
+	ConsulKeyPathName                       string `json:"consul_key_path_name"`
 }
 // 这里储存了所有consul的数据
 type ConsulKVs struct{
