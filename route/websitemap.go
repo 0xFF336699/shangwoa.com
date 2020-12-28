@@ -1,12 +1,16 @@
 package route
 
 import (
+	"mime"
 	"net/http"
 	"path"
 	"shangwoa.com/os2"
 	"strings"
 )
 
+func init() {
+	mime.AddExtensionType("apk", "application/vnd.android.package-archiv")
+}
 type FilePath struct {
 	//静态文件目录 例如 "F:\\work\\express\\web\\express-web-docs"
 	Directory string `json:"directory"`
