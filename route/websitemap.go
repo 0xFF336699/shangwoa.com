@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	mime.AddExtensionType("apk", "application/vnd.android.package-archiv")
+	mime.AddExtensionType(".apk", "application/vnd.android.package-archive")
 }
 type FilePath struct {
 	//静态文件目录 例如 "F:\\work\\express\\web\\express-web-docs"
