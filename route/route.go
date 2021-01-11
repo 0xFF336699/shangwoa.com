@@ -163,6 +163,9 @@ func (app *App) AddRouter(router *Route) {
 func (app *App) Get(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodGet}))
 }
+func (app *App) POST(pattern string, handler handler) {
+	app.AddRouter(createRouter(pattern, handler, []string{http.MethodPost}))
+}
 func (app *App) OPTIONS(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodOptions}))
 }
