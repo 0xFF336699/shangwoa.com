@@ -1,6 +1,7 @@
 package redisdb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
@@ -61,7 +62,7 @@ func createRedisClient(opt *redis.Options) (err error, client *redis.Client) {
 		var err error
 		err, client = redis2.GetClient(opt)
 		if client != nil {
-			_, err = client.Ping().Result()
+			_, err = client.Ping(context.Background()).Result()
 			if err == nil{
 				fmt.Println(fmt.Printf("redis connected"))
 				return nil, client

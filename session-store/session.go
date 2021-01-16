@@ -1,14 +1,15 @@
 package session_store
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-redis/redis"
-	"github.com/rbcervilla/redisstore"
 	"github.com/gorilla/sessions"
+	"github.com/rbcervilla/redisstore"
 )
 var stores = map[string]*redisstore.RedisStore{}
 func CreateStore(alias, keyPrefix string, client *redis.Client, opts *sessions.Options ) (err error) {
-	store, err := redisstore.NewRedisStore(client)
+	store, err := redisstore.NewRedisStore(context.Background(), client)
 	if err != nil {
 		fmt.Println("failed to create redis store: ", err.Error())
 		return
