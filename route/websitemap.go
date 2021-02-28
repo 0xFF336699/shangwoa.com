@@ -4,6 +4,7 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"path/filepath"
 	"shangwoa.com/os2"
 	"strings"
 )
@@ -80,6 +81,7 @@ func GetFilePathByUrlPath(p string) (err error, realPath string, hasFile bool) {
 	}
 	for _, pathConf := range site.FilePaths{
 		d := path.Join(pathConf.Directory, fp)
+		d = filepath.FromSlash(d)
 		if fileExist(d){
 			return  nil, d, true
 		}

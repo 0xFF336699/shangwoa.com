@@ -163,10 +163,10 @@ func (app *App) AddRouter(router *Route) {
 func (app *App) Get(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodGet}))
 }
-func (app *App) POST(pattern string, handler handler) {
+func (app *App) Post(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodPost}))
 }
-func (app *App) OPTIONS(pattern string, handler handler) {
+func (app *App) Options(pattern string, handler handler) {
 	app.AddRouter(createRouter(pattern, handler, []string{http.MethodOptions}))
 }
 func createRouter(pattern string, handler handler, types []string) (router *Route) {
