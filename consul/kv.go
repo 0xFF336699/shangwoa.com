@@ -17,6 +17,7 @@ import (
 
 // KVValue consul里实际储存的键值。这个是当前暂时默认使用的结构，如果有其它的结构则需要另行定义。
 // 如果是json，则能够储存bool和数字，如果value直接是值，则都会被认为是string类型，所以推荐使用json结构体储存value
+// mq现在是用KVValue来配置
 type KVValue struct {
 	// Int 如果value是int
 	Int int
