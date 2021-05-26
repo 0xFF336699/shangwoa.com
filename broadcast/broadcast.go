@@ -6,21 +6,21 @@ import (
 )
 
 type callbackFunc func(i interface{})
-type BroadCast struct{
+type Broadcast struct{
 	m sync.RWMutex
 	chListeners []chan<- interface{}
 	callbacks [] callbackFunc
 }
 
-func NewBroadCaster() *BroadCast {
-	return &BroadCast{
+func NewBroadcaster() *Broadcast {
+	return &Broadcast{
 		m:           sync.RWMutex{},
 		chListeners: [] chan<- interface{}{},
 		callbacks: []callbackFunc{},
 	}
 }
 
-func (this *BroadCast) AddListener(ch chan<- interface{}) (inserted bool) {
+func (this *Broadcast) AddListener(ch chan<- interface{}) (inserted bool) {
 	this.m.RLock()
 	defer this.m.RUnlock()
 	for _, v := range this.chListeners{
@@ -32,7 +32,7 @@ func (this *BroadCast) AddListener(ch chan<- interface{}) (inserted bool) {
 	return true
 }
 
-func (this *BroadCast) RemoveListener(ch chan interface{}) (removed bool) {
+func (this *Broadcast) RemoveListener(ch chan interface{}) (removed bool) {
 	this.m.Lock()
 	defer this.m.Unlock()
 	for i, v := range this.chListeners{
@@ -44,7 +44,7 @@ func (this *BroadCast) RemoveListener(ch chan interface{}) (removed bool) {
 	return false
 }
 
-func (this *BroadCast) AddCallback(f callbackFunc) (inserted bool) {
+func (this *Broadcast) AddCallback(f callbackFunc) (inserted bool) {
 	this.m.RLock()
 	defer this.m.RUnlock()
 	v1 := reflect.ValueOf(f)
@@ -58,7 +58,7 @@ func (this *BroadCast) AddCallback(f callbackFunc) (inserted bool) {
 	return true
 }
 
-func (this *BroadCast) RemoveCallback(f callbackFunc) (removed bool) {
+func (this *Broadcast) RemoveCallback(f callbackFunc) (removed bool) {
 	this.m.Lock()
 	defer this.m.Unlock()
 	v1 := reflect.ValueOf(f)
@@ -72,7 +72,7 @@ func (this *BroadCast) RemoveCallback(f callbackFunc) (removed bool) {
 	return false
 }
 // 侦听时需要根据情况来决定是否要对i进行加锁
-func (this *BroadCast) Broadcast(i interface{}) {
+func (this *Broadcast) Broadcast(i interface{}) {
 	this.m.RLock()
 	defer this.m.RUnlock()
 	for _, v := range this.chListeners{

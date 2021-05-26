@@ -153,6 +153,7 @@ func GetKeys(url string, m map[string]*KV) error {
 	r.Header.Set("Content-Type", "application/json")
 	b, err := http2.ClientDo(r, http2.GetEmptyClient())
 	if err != nil {
+		fmt.Println("consul error is", string(b))
 		return err
 	}
 	var txn TxnResult
