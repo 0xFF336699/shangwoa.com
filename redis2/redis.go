@@ -1,6 +1,7 @@
 package redis2
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-redis/redis"
 	"strconv"
@@ -18,7 +19,7 @@ func CreateClient(addr, pw string, db int) (err error, client *redis.Client)  {
 		Password: pw, // no password set
 		DB:       db,  // use default DB
 	})
-	pong, err := client.Ping().Result()
+	pong, err := client.Ping(context.Background()).Result()
 	if err != nil{
 		s := err.Error()
 		panic(s)
@@ -38,7 +39,7 @@ func SetDefaultClient(addr, pw string, db int) (err error, client *redis.Client)
 
 func Create(opt *redis.Options)(err error, client *redis.Client)  {
 	client = redis.NewClient(opt)
-	_, err = client.Ping().Result()
+	_, err = client.Ping(context.Background()).Result()
 	if err != nil{
 		return
 	}
