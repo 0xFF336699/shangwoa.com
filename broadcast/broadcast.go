@@ -9,7 +9,7 @@ type callbackFunc func(i interface{})
 type Broadcast struct{
 	m sync.RWMutex
 	chListeners []chan<- interface{}
-	callbacks [] callbackFunc
+	callbacks []callbackFunc
 }
 
 func NewBroadcaster() *Broadcast {
