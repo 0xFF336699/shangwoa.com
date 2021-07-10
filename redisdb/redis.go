@@ -44,6 +44,7 @@ func getRedisByKVRedis(kvRedis *consul.KVRedis) (err error, client *redis.Client
 		Password: kvRedis.PW, // no password set
 		DB:       kvRedis.DB, // use default DB
 	}
+	fmt.Println("redis kv are", kvRedis.Name, kvRedis.DB, kvRedis.Addr, kvRedis.PW)
 	err, client = createRedisClient(opt)
 	if client != nil{
 		clients[RedisName(kvRedis.Name)] = &ClientWithConf{
