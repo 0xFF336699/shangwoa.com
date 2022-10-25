@@ -3,6 +3,7 @@ package session_store
 import (
 	"context"
 	"fmt"
+	"time"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/sessions"
 	"github.com/rbcervilla/redisstore"
@@ -18,6 +19,23 @@ func CreateStore(alias, keyPrefix string, client *redis.Client, opts *sessions.O
 	store.Options(*opts)
 	stores[alias] = store
 	return
+}
+
+func GetOrCreateStore(alias, keyPrefix string, client *redis.Client, opts *sessions.Options ) (store *redisstore.RedisStore){
+	if store, ok := stores[alias]; ok{
+		return store
+	}
+	for {
+		err := CreateStore(alias, keyPrefix, client, opts)
+		if err != nil{
+			time.Sleep(time.Second * 3)
+		}else{
+			if store, ok := stores[alias]; ok{
+				return store
+			}
+		}
+	}
+	return 
 }
 
 func MustGetStore(alias string) *redisstore.RedisStore  {

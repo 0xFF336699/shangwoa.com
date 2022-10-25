@@ -52,8 +52,9 @@ func ToFormatByLocation(in time.Time, location *time.Location, layout string) (s
 }
 
 func TimeToBeiJingTime(in time.Time) ( t time.Time) {
-	t = in.UTC()
-	t = t.Add(8 * HourDuration)
+	//t = in.UTC()
+	//t = t.Add(8 * HourDuration)
+	t = in.In(CNLocation)
 	return
 }
 

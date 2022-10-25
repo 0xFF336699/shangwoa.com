@@ -79,6 +79,10 @@ type KVRedis struct {
 	Extra string `json:"extra"`
 }
 
+type QiniuAkSk struct{
+	AccessKey string
+	SecretKey string
+}
 type KV struct {
 	Err *error
 	Key string

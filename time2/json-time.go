@@ -1,38 +1,69 @@
 package time2
 
+
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"time"
 )
 
-
-// JSONTime format json time field by myself
-type JSONTime struct {
+// JsonTime format json time field by myself
+type JsonTime struct {
 	time.Time
 }
 
-// MarshalJSON on JSONTime format Time field with %Y-%m-%d %H:%M:%S
-func (t JSONTime) MarshalJSON() ([]byte, error) {
-	formatted := fmt.Sprintf("\"%s\"", t.Format("2006-01-02 15:04:05"))
+// MarshalJSON on JsonTime format Time field with %Y-%m-%d %H:%M:%S
+func (this *JsonTime) MarshalJSON() ([]byte, error) {
+
+	formatted := fmt.Sprintf("\"%s\"", this.Format("2006-01-02 15:04:05"))
 	return []byte(formatted), nil
 }
 
+func (this *JsonTime) UnmarshalJSON(data []byte) (err error) {
+
+	var t time.Time
+	err, isOk, t := ParseTimeFromString(string(data))
+	if err != nil{
+		return
+	}
+	if isOk{
+		*this = JsonTime{t}
+	}
+	return
+}
 // Value insert timestamp into mysql need this function.
-func (t JSONTime) Value() (driver.Value, error) {
+func (t *JsonTime) Value() (driver.Value, error) {
 	var zeroTime time.Time
-	if t.Time.UnixNano() == zeroTime.UnixNano() {
+	if t.UnixNano() == zeroTime.UnixNano() {
 		return nil, nil
 	}
-	return t.Time, nil
+	return time.Unix(t.Unix(), 10), nil
 }
 
 // Scan valueof time.Time
-func (t *JSONTime) Scan(v interface{}) error {
-	value, ok := v.(time.Time)
-	if ok {
-		*t = JSONTime{Time: value}
-		return nil
+func (this *JsonTime) Scan(v interface{}) (err error) {
+	if v == nil{
+		return
 	}
-	return fmt.Errorf("can not convert %v to timestamp", v)
+	var data []uint8
+	switch v.(type) {
+	case []uint8:
+		data = v.([]uint8)
+		break
+	default:
+		fmt.Println("unknow type", v)
+		return errors.New("unknow type")
+	}
+
+	var t time.Time
+	err, isOk, t := ParseTimeFromString(string(data))
+	if err != nil{
+		return
+	}
+	if isOk{
+		*this = JsonTime{t}
+	}
+	return
 }
+

@@ -4,7 +4,7 @@ import (
 
 	"sync"
 )
-func SyncMapLoadKStringVInt(m sync.Map, key string)(v int, ok bool)  {
+func KStringVIntSyncMapLoad(m sync.Map, key string)(v int, ok bool)  {
 	i, ok := m.Load(key)
 	if !ok{
 		return
@@ -13,7 +13,7 @@ func SyncMapLoadKStringVInt(m sync.Map, key string)(v int, ok bool)  {
 	return
 }
 
-func SyncMapLoadOrStoreKStringVInt(m sync.Map, key string, value int)(v int, ok bool)  {
+func KStringVIntSyncMapLoadOrStore(m sync.Map, key string, value int)(v int, ok bool)  {
 	i, ok := m.LoadOrStore(key, value)
 	if !ok{
 		return
@@ -22,7 +22,7 @@ func SyncMapLoadOrStoreKStringVInt(m sync.Map, key string, value int)(v int, ok 
 	return
 }
 
-func SyncMapRangeKStringVInt(m sync.Map, f func(key string, value int) bool )  {
+func KStringVIntSyncMapRange(m sync.Map, f func(key string, value int) bool )  {
 	m.Range(func(key, value interface{}) bool {
 		k := key.(string)
 		v := value.(int)

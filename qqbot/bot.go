@@ -68,6 +68,9 @@ type BotRes struct {
 }
 
 func (bot *Bot) post(api string, data interface{}, resStruct interface{}) (err error, res *BotRes) {
+	if(true){
+		return
+	}
 	client := &http.Client{}
 	jo, err := json.Marshal(data)
 	if err != nil{
