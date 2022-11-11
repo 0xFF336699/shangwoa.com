@@ -31,6 +31,38 @@ func DynamicParseString(m map[string]interface{}, key, def string, onConverted o
 	}
 	return res
 }
+func DynamicParseStringList(m map[string]interface{}, key, def string, onConverted onParseUnmatch) []string {
+	res := []string{}
+	converted := false
+	var v interface{}
+	var b bool
+	var matched = false
+	if v, b = m[key]; b{
+		switch v.(type) {
+		case []interface{}:
+			list := v.([]interface{})
+			for _, d := range list{
+				s := def
+				switch d.(type) {
+				case string:
+					s = d.(string)
+					matched = true
+					break;
+				case int, int32, int64, float32, float64:
+					s = stringnumber.ToString(d)
+					converted = true
+					break;
+				}
+				res = append(res, s)
+			}
+			break;
+		}
+	}
+	if !matched{
+		onConverted(m, key, def, v, converted)
+	}
+	return res
+}
 
 func DynamicParseBool(m map[string]interface{}, key string, def bool, onConverted onParseUnmatch) bool {
 	var res = def
@@ -169,6 +201,47 @@ func DynamicParseFloat64(m map[string]interface{}, key string, def float64, onCo
 				converted = true
 			}
 			break
+		}
+	}
+
+	if err != nil && onError != nil{
+		onError(m, key, def, err)
+	}else if !matched && onConverted != nil{
+		onConverted(m, key, def, v, converted)
+	}
+	return res
+}
+
+func DynamicParseFloat64List(m map[string]interface{}, key string, def float64, onConverted onParseUnmatch, onError onParseError) []float64 {
+	var res = []float64{}
+	converted := false
+	var err error
+	var v interface{}
+	var b bool
+	matched := false
+	if v, b = m[key]; b{
+		switch v.(type) {
+		case []interface{}:
+			list := v.([]interface{})
+			for _, d := range list{
+				n := def
+				switch d.(type) {
+				case int,float64,float32:
+					n = d.(float64)
+					matched = true
+					break;
+				case string:
+					var i float64
+					i, err = strconv.ParseFloat(d.(string), 10)
+					if err == nil{
+						n = i
+						converted = true
+					}
+					break
+				}
+				res = append(res, n)
+			}
+			break;
 		}
 	}
 
