@@ -23,6 +23,19 @@ func PrintFuncError(prefix string, err error, skip int, params ...interface{}) (
 	return
 }
 
+func PrintInfo(params ...interface{}) (bl bool) {
+	bs, e := json.Marshal(params)
+	if e != nil {
+		var fn = ""
+		pc, _, line, ok := runtime.Caller(1)
+		if ok {
+			fn = runtime.FuncForPC(pc).Name()
+		}
+		fmt.Println("print error info", fn, line, "marshal data err", params)
+	}
+	fmt.Println(string(bs))
+	return true
+}
 func TryPrintFuncError(prefix string, err error, skip int, params ...interface{}) (hasError bool) {
 	hasError = err != nil
 	if hasError {
@@ -33,14 +46,14 @@ func TryPrintFuncError(prefix string, err error, skip int, params ...interface{}
 
 func GetFuncLineInfo(err error, skip int) (hasError, ok bool, fn string, line int, file string, pc uintptr) {
 	if err == nil{
-		return 
+		return
 	}
 	hasError = true
 	pc, file, line, ok = runtime.Caller(skip)
 	if ok {
 		fn = runtime.FuncForPC(pc).Name()
 	} else {
-		return 
+		return
 	}
 	return
 }
@@ -69,7 +82,7 @@ func PrintLineInfo(skip int, prefix string, params ...interface{}) {
 		fn = runtime.FuncForPC(pc).Name()
 	} else {
 		fmt.Println("PrintLineInfo runtime.Caller not ok", prefix, string(bs))
-		return 
+		return
 	}
 	fmt.Println("PrintLineInfo", prefix, pc, file, line, fn, string(bs))
 }
