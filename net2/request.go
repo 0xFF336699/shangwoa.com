@@ -80,3 +80,19 @@ func CreateForm(form map[string]interface{}) (string, io.Reader, error) {
 	}
 	return mp.FormDataContentType(), body, nil
 }
+
+func HttpGet(url string) (err error, isOk bool, body []byte) {
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err = ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
+	fmt.Println(resp.StatusCode)
+	if resp.StatusCode == 200 {
+		isOk = true
+	}
+	return
+}
