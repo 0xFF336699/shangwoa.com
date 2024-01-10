@@ -28,11 +28,6 @@ func (this *EventDispatcher) AddEventListener(eventType string, handler Handler)
 		if reflect.ValueOf(node.Value) == reflect.ValueOf(handler){
 			l.Remove(node)
 		}
-		//if f, ok := node.Value.(Handler); ok {
-		//	if f == listener{
-		//		l.Remove(node)
-		//	}
-		//}
 	}
 	l.PushBack(handler)
 }
@@ -47,12 +42,6 @@ func (this *EventDispatcher) RemoveListener(eventType string, handler Handler) b
 			l.Remove(node)
 			return true
 		}
-		//if f, ok := node.Value.(*Handler); ok {
-		//	if f == listener{
-		//		l.Remove(node)
-		//		return true
-		//	}
-		//}
 	}
 	return false
 }
@@ -67,7 +56,6 @@ func (this *EventDispatcher) Dispatch(event *Event) bool  {
 	for node := l.Front(); node != nil; node = node.Next(){
 		if f, ok := node.Value.(Handler); ok {
 			f(event)
-			//f.handler(event)
 			if event.stoped{
 				return false
 			}
@@ -83,12 +71,6 @@ func (this *EventDispatcher) HasEventListener(eventType string) bool {
 	}
 	l := this.types[eventType]
 	return l.Len() > 0
-	//for node := l.Front(); node != nil; node = node.Next(){
-	//	if _, ok := node.Value.(*Handler); ok {
-	//		return true
-	//	}
-	//}
-	//return false
 }
 
 func NewEventDispatcher() ( *EventDispatcher) {

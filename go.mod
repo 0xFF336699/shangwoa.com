@@ -1,17 +1,27 @@
 module shangwoa.com
 
+go 1.21.5
+
+require (
+	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/gorilla/sessions v1.2.2
+	github.com/jinzhu/gorm v1.9.16
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/lib/pq v1.10.9
+	github.com/olivere/elastic v6.2.37+incompatible
+	github.com/pkg/errors v0.9.1
+	github.com/rbcervilla/redisstore v1.1.0
+	github.com/sirupsen/logrus v1.9.3
+	github.com/streadway/amqp v1.1.0
+	golang.org/x/text v0.14.0
+)
+
 require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
-	github.com/go-redis/redis v6.15.2+incompatible
-	github.com/jinzhu/gorm v1.9.5
-	github.com/jmoiron/sqlx v1.2.0
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/lib/pq v1.1.0
-	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
-	github.com/olivere/elastic v6.2.17+incompatible
-	github.com/pkg/errors v0.8.1
-	github.com/sirupsen/logrus v1.4.1
-	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
-	golang.org/x/text v0.3.2
-	qiniupkg.com/x v7.0.8+incompatible
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 )
